@@ -54,9 +54,17 @@ public class PallasCdiExtension implements Extension {
 
     void afterBeanDiscovery(@Observes AfterBeanDiscovery abd) {
 
+        checkApplication();
         checkControllerNames();
 
         LOGGER.info("Start " + Pallas.NAME + " application: " + webApplicationClass.getCanonicalName());
+    }
+
+    private void checkApplication() {
+
+        if (null == webApplicationClass) {
+            throw new DeploymentException("Specify application class. See: " + WebApplication.class.getCanonicalName());
+        }
     }
 
     private void checkControllerNames() {
