@@ -122,7 +122,7 @@ public class ControllerFactory {
 
         switch (pathParts.length) {
         case 1:
-            if (controllerName.equalsIgnoreCase(pathParts[0])) {
+            if (controllerName.equals(pathParts[0])) {
 
                 final Object controller = getControllerInstance(controllerClass);
                 final Method action = getDefaultAction(controllerClass);
@@ -130,10 +130,12 @@ public class ControllerFactory {
             }
             break;
         case 2:
-
-            final Object controller = getControllerInstance(controllerClass);
-            final Method action = getNamedAction(controllerClass, pathParts[1]);
-            return new ControllerAction(controller, action);
+            if (controllerName.equals(pathParts[0])) {
+                final Object controller = getControllerInstance(controllerClass);
+                final Method action = getNamedAction(controllerClass, pathParts[1]);
+                return new ControllerAction(controller, action);
+            }
+            break;
 
         default:
             throw new io.pallas.core.execution.ServerException("Unimplemented function");
@@ -147,7 +149,11 @@ public class ControllerFactory {
 
         final Set<Method> methods = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withName(name), publicModifierPredicate());
 
-        if (methods.size() != 1) {
+        if (methods.isEmpty()) {
+            throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has no public method with name: '" + name + "'");
+        }
+
+        if (methods.size() > 1) {
             throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has multiple method with name: '" + name + "'");
         }
 
@@ -213,7 +219,8 @@ public class ControllerFactory {
         if (canonical.startsWith("/")) {
             canonical = canonical.substring(1);
         }
-        return canonical;
+
+        return StringUtils.uncapitalize(canonical);
     }
 
 }

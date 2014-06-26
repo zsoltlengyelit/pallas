@@ -144,7 +144,7 @@ public class ExecutionContext {
 
     private Object convertParameter(final String parameter, final Class<?> paramType) {
 
-        if (null == parameter) {
+        if (null == parameter) { // null is not convertable
             return null;
         }
 
