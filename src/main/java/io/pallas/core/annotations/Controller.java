@@ -5,8 +5,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Stereotype;
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
+@Stereotype
+@RequestScoped
 public @interface Controller {
 
     String value() default "";
