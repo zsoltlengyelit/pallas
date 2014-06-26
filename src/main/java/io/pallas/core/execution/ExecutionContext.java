@@ -27,18 +27,18 @@ public class ExecutionContext {
      * @param request
      * @param response
      */
-    public void execute(HttpServletRequest request, HttpServletResponse response) {
+    public void execute(final HttpServletRequest request, final HttpServletResponse response) {
 
-        String queryString = request.getQueryString();
-        String pathInfo = request.getPathInfo();
+        final String queryString = request.getQueryString();
+        final String pathInfo = request.getPathInfo();
 
-        ControllerAction controller = controllerFactory.createController(pathInfo);
+        final ControllerAction controller = controllerFactory.createController(pathInfo);
 
         if (null == controller) {
 
             try {
                 response.getWriter().append("Cannot found action");
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -46,29 +46,29 @@ public class ExecutionContext {
         } else {
 
             try {
-                Object result = invokeController(controller, request);
+                final Object result = invokeController(controller, request);
                 handleResult(response, result);
-            } catch (ServerException serverException) {
+            } catch (final ServerException serverException) {
                 handleServerError(serverException, response);
             }
         }
 
     }
 
-    private void handleServerError(ServerException serverException, HttpServletResponse response) {
+    private void handleServerError(final ServerException serverException, final HttpServletResponse response) {
 
         try {
 
             response.getWriter().append(serverException.getLocalizedMessage());
             response.getWriter().println();
             serverException.printStackTrace(response.getWriter());
-        } catch (IOException e) {
+        } catch (final IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
 
-    private void handleResult(HttpServletResponse response, Object result) {
+    private void handleResult(final HttpServletResponse response, final Object result) {
 
         if (null == result) {
             return;
@@ -76,7 +76,7 @@ public class ExecutionContext {
         if (result instanceof String) {
             try {
                 response.getWriter().append((String) result);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new ServerException("Cannot write response", e);
             }
         } else {
@@ -85,18 +85,18 @@ public class ExecutionContext {
 
     }
 
-    private Object invokeController(ControllerAction controller, HttpServletRequest request) {
+    private Object invokeController(final ControllerAction controller, final HttpServletRequest request) {
 
         try {
             // TODO params
 
-            Method action = controller.getAction();
+            final Method action = controller.getAction();
 
-            Object[] parameters = getActionParameters(action.getParameterTypes(), action.getParameterAnnotations(), request);
+            final Object[] parameters = getActionParameters(action.getParameterTypes(), action.getParameterAnnotations(), request);
 
-            Object object = controller.getController();
+            final Object object = controller.getController();
 
-            Object result = action.invoke(object, parameters);
+            final Object result = action.invoke(object, parameters);
             return result;
 
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
@@ -105,18 +105,18 @@ public class ExecutionContext {
 
     }
 
-    private Object[] getActionParameters(Class<?>[] parameterTypes, Annotation[][] annotations, HttpServletRequest request) {
+    private Object[] getActionParameters(final Class<?>[] parameterTypes, final Annotation[][] annotations, final HttpServletRequest request) {
 
-        Object[] parameters = new Object[parameterTypes.length];
+        final Object[] parameters = new Object[parameterTypes.length];
         for (int i = 0; i < parameterTypes.length; i++) {
 
-            Class<?> paramType = parameterTypes[i];
+            final Class<?> paramType = parameterTypes[i];
             parameters[i] = null; // default value
 
-            Annotation[] paramAnnotations = annotations[i];
+            final Annotation[] paramAnnotations = annotations[i];
             int queryParamIndex = -1;
             for (int j = 0; j < paramAnnotations.length; j++) {
-                Annotation paramAnnotation = paramAnnotations[j];
+                final Annotation paramAnnotation = paramAnnotations[j];
 
                 if (QueryParam.class.isAssignableFrom(paramAnnotation.getClass())) {
                     queryParamIndex = j;
@@ -125,13 +125,13 @@ public class ExecutionContext {
             }
 
             if (queryParamIndex > -1) {
-                QueryParam annotation = (QueryParam) paramAnnotations[queryParamIndex];
-                String paramName = annotation.value();
+                final QueryParam annotation = (QueryParam) paramAnnotations[queryParamIndex];
+                final String paramName = annotation.value();
                 if (!StringUtils.isEmpty(paramName)) {
 
-                    String parameter = request.getParameter(paramName);
+                    final String parameter = request.getParameter(paramName);
 
-                    Object converterParam = convertParameter(parameter, paramType);
+                    final Object converterParam = convertParameter(parameter, paramType);
                     parameters[i] = converterParam;
 
                 }
@@ -142,7 +142,11 @@ public class ExecutionContext {
         return parameters;
     }
 
-    private Object convertParameter(String parameter, Class<?> paramType) {
+    private Object convertParameter(final String parameter, final Class<?> paramType) {
+
+        if (null == parameter) {
+            return null;
+        }
 
         if (String.class.isAssignableFrom(paramType)) {
             return parameter;
