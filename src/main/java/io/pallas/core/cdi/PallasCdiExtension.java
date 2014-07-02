@@ -24,25 +24,25 @@ import javax.inject.Singleton;
 @Singleton
 public class PallasCdiExtension implements Extension {
 
-    private static final org.apache.log4j.Logger LOGGER      = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
+    private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
 
-    private final Set<Class<?>>                  modules     = new HashSet<Class<?>>();
-    private final Set<Class<?>>                  controllers = new HashSet<Class<?>>();
-    private Class<? extends WebApplication>      webApplicationClass;
+    private final Set<Class<?>> modules = new HashSet<Class<?>>();
+    private final Set<Class<?>> controllers = new HashSet<Class<?>>();
+    private Class<? extends WebApplication> webApplicationClass;
 
-    <T> void processModule(@Observes @WithAnnotations({ Module.class }) ProcessAnnotatedType<T> pat) {
-        Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
+    public <T> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
+        final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
         modules.add(javaClass);
     }
 
-    <T> void processControllers(@Observes @WithAnnotations({ Controller.class }) ProcessAnnotatedType<T> pat) {
-        Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
+    public <T> void processControllers(@Observes @WithAnnotations({ Controller.class }) final ProcessAnnotatedType<T> pat) {
+        final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
         controllers.add(javaClass);
     }
 
-    <T extends WebApplication> void processApplication(@Observes @WithAnnotations(Application.class) ProcessAnnotatedType<T> pat) {
+    public <T extends WebApplication> void processApplication(@Observes @WithAnnotations(Application.class) final ProcessAnnotatedType<T> pat) {
 
-        Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
+        final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
         if (null != webApplicationClass) {
             throw new DeploymentException(WebApplication.class.getSimpleName() + " is defined more then once: " + webApplicationClass.getCanonicalName() + ", "
@@ -52,7 +52,7 @@ public class PallasCdiExtension implements Extension {
         webApplicationClass = javaClass;
     }
 
-    void afterBeanDiscovery(@Observes AfterBeanDiscovery abd) {
+    void afterBeanDiscovery(@Observes final AfterBeanDiscovery abd) {
 
         checkApplication();
         checkControllerNames();
@@ -69,12 +69,12 @@ public class PallasCdiExtension implements Extension {
 
     private void checkControllerNames() {
 
-        Set<String> names = new HashSet<String>();
+        final Set<String> names = new HashSet<String>();
 
-        for (Class<?> controllerClass : controllers) {
+        for (final Class<?> controllerClass : controllers) {
 
-            Controller annotation = controllerClass.getAnnotation(Controller.class);
-            String name = annotation.value();
+            final Controller annotation = controllerClass.getAnnotation(Controller.class);
+            final String name = annotation.value();
 
             if (names.contains(name)) {
                 throw new DeploymentException("Duplicate controller name: " + name);

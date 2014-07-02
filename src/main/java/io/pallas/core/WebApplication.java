@@ -1,13 +1,22 @@
 package io.pallas.core;
 
-public abstract class WebApplication extends Application {
+import io.pallas.core.annotations.Component;
+import io.pallas.core.controller.ControllerFactory;
 
-    /**
-     *
-     * @return name of the application
-     */
-    public String getName() {
-        return Pallas.NAME;
+import javax.enterprise.inject.Produces;
+
+/**
+ * Base web application.
+ *
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
+ *
+ */
+public class WebApplication extends Application {
+
+    @Produces
+    @Component
+    public ControllerFactory createControllerFactory() {
+        return getComponent(ControllerFactory.class);
     }
 
 }

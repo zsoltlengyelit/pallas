@@ -1,7 +1,9 @@
 package io.pallas.core.controller;
 
+import io.pallas.core.annotations.ComponentName;
 import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.DefaultAction;
+import io.pallas.core.annotations.PostConfiguration;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
 
@@ -18,9 +20,10 @@ import com.google.common.base.Predicate;
 
 /**
  *
- * @author Zsolti
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  *
  */
+@ComponentName("controllerFactory")
 public class ControllerFactory {
 
     private static final String DEFAULT_ACTION_NAME = "index";
@@ -28,8 +31,14 @@ public class ControllerFactory {
     @Inject
     private PallasCdiExtension cdiExtension;
 
+    /** Dynamic CDI injector. */
     @Inject
     private LookupService lookupService;
+
+    @PostConfiguration
+    public void init() {
+
+    }
 
     /**
      *

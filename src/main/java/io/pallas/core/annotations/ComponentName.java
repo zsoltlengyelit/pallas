@@ -11,18 +11,19 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import javax.inject.Qualifier;
-
 /**
+ * Specifies a component family.
  *
- * @author Zsolti
+ * In configuration file this name identifies the component.
+ * 
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  *
  */
-@Qualifier
 @Inherited
 @Target({ TYPE, METHOD, PARAMETER, FIELD })
 @Retention(RUNTIME)
 @Documented
-public @interface Component {
+public @interface ComponentName {
 
+    String value();
 }

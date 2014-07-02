@@ -1,5 +1,6 @@
 package io.pallas.core.execution;
 
+import io.pallas.core.annotations.Component;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerFactory;
 
@@ -20,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 public class ExecutionContext {
 
     @Inject
+    @Component
     private ControllerFactory controllerFactory;
 
     /**
