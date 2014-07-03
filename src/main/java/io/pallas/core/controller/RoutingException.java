@@ -1,20 +1,21 @@
 package io.pallas.core.controller;
 
 /**
- *
- * @author Zsolti
+ * Thrown when cannot decide about routing path which controller can handle.
+ * 
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  *
  */
 public class RoutingException extends RuntimeException {
 
-    public RoutingException(String message, Throwable cause) {
+    private static final long serialVersionUID = -3645455451559393929L;
+
+    public RoutingException(final String message, final Throwable cause) {
         super(message, cause);
-        // TODO Auto-generated constructor stub
     }
 
-    public RoutingException(String message) {
+    public RoutingException(final String message) {
         super(message);
-        // TODO Auto-generated constructor stub
     }
 
 }

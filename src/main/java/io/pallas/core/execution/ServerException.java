@@ -1,13 +1,19 @@
 package io.pallas.core.execution;
 
+/**
+ *
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
+ *
+ */
 public class ServerException extends RuntimeException {
 
-    public ServerException(String message, Throwable cause) {
+    private static final long serialVersionUID = 5018770957595587549L;
+
+    public ServerException(final String message, final Throwable cause) {
         super(message, cause);
-        // TODO Auto-generated constructor stub
     }
 
-    public ServerException(String message) {
+    public ServerException(final String message) {
         super(message);
     }
 

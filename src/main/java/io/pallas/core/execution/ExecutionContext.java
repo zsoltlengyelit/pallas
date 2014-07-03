@@ -3,9 +3,9 @@ package io.pallas.core.execution;
 import io.pallas.core.annotations.Component;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerFactory;
+import io.pallas.core.controller.action.param.ActionParamsProvider;
 
 import java.io.IOException;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -13,16 +13,21 @@ import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.QueryParam;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 
 @RequestScoped
 public class ExecutionContext {
 
     @Inject
+    private Logger logger;
+
+    @Inject
     @Component
     private ControllerFactory controllerFactory;
+
+    @Inject
+    private ActionParamsProvider actionParamsProvider;
 
     /**
      *
@@ -31,7 +36,6 @@ public class ExecutionContext {
      */
     public void execute(final HttpServletRequest request, final HttpServletResponse response) {
 
-        final String queryString = request.getQueryString();
         final String pathInfo = request.getPathInfo();
 
         final ControllerAction controller = controllerFactory.createController(pathInfo);
@@ -41,8 +45,7 @@ public class ExecutionContext {
             try {
                 response.getWriter().append("Cannot found action");
             } catch (final IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                logger.error(e);
             }
 
         } else {
@@ -65,8 +68,7 @@ public class ExecutionContext {
             response.getWriter().println();
             serverException.printStackTrace(response.getWriter());
         } catch (final IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error(e);
         }
     }
 
@@ -94,7 +96,7 @@ public class ExecutionContext {
 
             final Method action = controller.getAction();
 
-            final Object[] parameters = getActionParameters(action.getParameterTypes(), action.getParameterAnnotations(), request);
+            final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
 
             final Object object = controller.getController();
 
@@ -107,59 +109,4 @@ public class ExecutionContext {
 
     }
 
-    private Object[] getActionParameters(final Class<?>[] parameterTypes, final Annotation[][] annotations, final HttpServletRequest request) {
-
-        final Object[] parameters = new Object[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-
-            final Class<?> paramType = parameterTypes[i];
-            parameters[i] = null; // default value
-
-            final Annotation[] paramAnnotations = annotations[i];
-            int queryParamIndex = -1;
-            for (int j = 0; j < paramAnnotations.length; j++) {
-                final Annotation paramAnnotation = paramAnnotations[j];
-
-                if (QueryParam.class.isAssignableFrom(paramAnnotation.getClass())) {
-                    queryParamIndex = j;
-                    break;
-                }
-            }
-
-            if (queryParamIndex > -1) {
-                final QueryParam annotation = (QueryParam) paramAnnotations[queryParamIndex];
-                final String paramName = annotation.value();
-                if (!StringUtils.isEmpty(paramName)) {
-
-                    final String parameter = request.getParameter(paramName);
-
-                    final Object converterParam = convertParameter(parameter, paramType);
-                    parameters[i] = converterParam;
-
-                }
-            }
-
-        }
-
-        return parameters;
-    }
-
-    private Object convertParameter(final String parameter, final Class<?> paramType) {
-
-        if (null == parameter) { // null is not convertable
-            return null;
-        }
-
-        if (String.class.isAssignableFrom(paramType)) {
-            return parameter;
-        } else if (Long.class.isAssignableFrom(paramType)) {
-            return Long.valueOf(parameter);
-        } else if (Integer.class.isAssignableFrom(paramType)) {
-            return Integer.valueOf(parameter);
-        }
-
-        // TODO
-        throw new IllegalArgumentException();
-
-    }
 }
