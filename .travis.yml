@@ -1,8 +1,2 @@
 language: java
 script: "mvn test -Ptest"
-notifications:
-  email:
-    recipients:
-      - zsolt.lengyel.it@gmail.com
-    on_success: change
-    on_failure: always
