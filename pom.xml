@@ -1,8 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.pallas</groupId>
-	<artifactId>core</artifactId>
+	<artifactId>pallas-core</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
@@ -62,18 +64,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.jboss.arquillian.junit</groupId>
-			<artifactId>arquillian-junit-container</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.jboss.arquillian.container</groupId>
-			<artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
-			<version>1.0.0.CR3</version>
-			<scope>test</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>javax.enterprise</groupId>
@@ -84,27 +74,36 @@
 
 		<dependency>
 			<groupId>org.jboss.spec</groupId>
-			<artifactId>jboss-javaee-6.0</artifactId>
+			<artifactId>jboss-javaee-7.0</artifactId>
 			<version>1.0.0.Final</version>
 			<type>pom</type>
 			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>org.jboss.weld.arquillian.container</groupId>
-			<artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
-			<version>1.1.2.Final</version>
+			<groupId>org.jboss.arquillian.junit</groupId>
+			<artifactId>arquillian-junit-container</artifactId>
+			<scope>test</scope>
 		</dependency>
 
 
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-simple</artifactId>
-			<version>1.6.4</version>
+			<groupId>org.jboss.arquillian.container</groupId>
+			<artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
+			<version>1.0.0.CR8</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.jboss.weld</groupId>
+			<artifactId>weld-core</artifactId>
+			<version>2.2.2.Final</version>
 			<scope>test</scope>
 		</dependency>
 
+
 	</dependencies>
+
 
 	<dependencyManagement>
 		<dependencies>
@@ -112,34 +111,54 @@
 				<groupId>org.jboss.arquillian</groupId>
 				<artifactId>arquillian-bom</artifactId>
 				<version>1.1.5.Final</version>
-				<scope>import</scope>
 				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
-
 			<dependency>
-				<groupId>org.jboss.shrinkwrap.resolver</groupId>
-				<artifactId>shrinkwrap-resolver-depchain</artifactId>
-				<version>2.1.1</version>
-				<scope>import</scope>
-				<type>pom</type>
+				<groupId>commons-collections</groupId>
+				<artifactId>commons-collections</artifactId>
+				<version>3.2.1</version>
+				<scope>runtime</scope>
 			</dependency>
-
 		</dependencies>
 	</dependencyManagement>
 
 	<profiles>
 		<profile>
-			<!-- An optional Arquillian testing profile that executes tests in a remote 
-				JBoss AS instance -->
-			<!-- Run with: mvn clean test -Parq-jbossas-remote -->
-			<id>arq-jbossas-remote</id>
+			<id>development</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>test</id>
+			<activation>
+				<property>
+					<name>profile</name>
+					<value>test</value>
+				</property>
+			</activation>
 			<dependencies>
 				<dependency>
-					<groupId>org.jboss.as</groupId>
-					<artifactId>jboss-as-arquillian-container-remote</artifactId>
-					<version>7.2.0.Final</version>
+					<groupId>org.jboss.spec</groupId>
+					<artifactId>jboss-javaee-6.0</artifactId>
+					<version>1.0.0.Final</version>
+					<type>pom</type>
+					<scope>provided</scope>
+				</dependency>
+				<dependency>
+					<groupId>org.jboss.arquillian.container</groupId>
+					<artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
+					<version>1.0.0.CR3</version>
 					<scope>test</scope>
 				</dependency>
+				<dependency>
+					<groupId>org.jboss.weld</groupId>
+					<artifactId>weld-core</artifactId>
+					<version>1.1.5.Final</version>
+					<scope>test</scope>
+				</dependency>
+
 			</dependencies>
 		</profile>
 

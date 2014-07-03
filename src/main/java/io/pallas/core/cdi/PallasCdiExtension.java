@@ -24,76 +24,82 @@ import javax.inject.Singleton;
 @Singleton
 public class PallasCdiExtension implements Extension {
 
-    private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
+	private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
 
-    private final Set<Class<?>> modules = new HashSet<Class<?>>();
-    private final Set<Class<?>> controllers = new HashSet<Class<?>>();
-    private Class<? extends WebApplication> webApplicationClass;
+	private final Set<Class<?>> modules = new HashSet<Class<?>>();
+	private final Set<Class<?>> controllers = new HashSet<Class<?>>();
+	private Class<? extends WebApplication> webApplicationClass;
 
-    public <T> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
-        final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
-        modules.add(javaClass);
-    }
+	public <T> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
+		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
-    public <T> void processControllers(@Observes @WithAnnotations({ Controller.class }) final ProcessAnnotatedType<T> pat) {
-        final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
-        controllers.add(javaClass);
-    }
+		if (javaClass.isAnnotationPresent(Module.class)) { // double check on class
+			modules.add(javaClass);
+		}
+	}
 
-    public <T extends WebApplication> void processApplication(@Observes @WithAnnotations(Application.class) final ProcessAnnotatedType<T> pat) {
+	public <T> void processControllers(@Observes @WithAnnotations({ Controller.class }) final ProcessAnnotatedType<T> pat) {
+		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
-        final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
+		if (javaClass.isAnnotationPresent(Controller.class)) { // double check because CDI 1.1 just recommends @WithAnnotations        
+			controllers.add(javaClass);
+		}
+	}
 
-        if (null != webApplicationClass) {
-            throw new DeploymentException(WebApplication.class.getSimpleName() + " is defined more then once: " + webApplicationClass.getCanonicalName() + ", "
-                    + javaClass.getCanonicalName());
-        }
+	public <T extends WebApplication> void processApplication(@Observes @WithAnnotations(Application.class) final ProcessAnnotatedType<T> pat) {
 
-        webApplicationClass = javaClass;
-    }
+		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
-    void afterBeanDiscovery(@Observes final AfterBeanDiscovery abd) {
+		if (null != webApplicationClass) {
+			throw new DeploymentException(WebApplication.class.getSimpleName() + " is defined more then once: " + webApplicationClass.getCanonicalName() + ", "
+			        + javaClass.getCanonicalName());
+		}
 
-        checkApplication();
-        checkControllerNames();
+		webApplicationClass = javaClass;
+	}
 
-        LOGGER.info("Start " + Pallas.NAME + " application: " + webApplicationClass.getCanonicalName());
-    }
+	void afterBeanDiscovery(@Observes final AfterBeanDiscovery abd) {
 
-    private void checkApplication() {
+		checkApplication();
+		checkControllerNames();
 
-        if (null == webApplicationClass) {
-            throw new DeploymentException("Specify application class. See: " + WebApplication.class.getCanonicalName());
-        }
-    }
+		LOGGER.info("Start " + Pallas.NAME + " application: " + webApplicationClass.getCanonicalName());
+	}
 
-    private void checkControllerNames() {
+	private void checkApplication() {
 
-        final Set<String> names = new HashSet<String>();
+		if (null == webApplicationClass) {
+			throw new DeploymentException("Specify application class. See: " + WebApplication.class.getCanonicalName());
+		}
+	}
 
-        for (final Class<?> controllerClass : controllers) {
+	private void checkControllerNames() {
 
-            final Controller annotation = controllerClass.getAnnotation(Controller.class);
-            final String name = annotation.value();
+		final Set<String> names = new HashSet<String>();
 
-            if (names.contains(name)) {
-                throw new DeploymentException("Duplicate controller name: " + name);
-            }
+		for (final Class<?> controllerClass : controllers) {
 
-            names.add(name);
-        }
-    }
+			final Controller annotation = controllerClass.getAnnotation(Controller.class);
+			final String name = annotation.value();
 
-    public Set<Class<?>> getModules() {
-        return modules;
-    }
+			if (names.contains(name)) {
+				throw new DeploymentException("Duplicate controller name: " + name);
+			}
 
-    public Set<Class<?>> getControllers() {
-        return controllers;
-    }
+			names.add(name);
+		}
+	}
 
-    public Class<? extends WebApplication> getWebApplicationClass() {
-        return webApplicationClass;
-    }
+	public Set<Class<?>> getModules() {
+		return modules;
+	}
+
+	public Set<Class<?>> getControllers() {
+		return controllers;
+	}
+
+	public Class<? extends WebApplication> getWebApplicationClass() {
+		return webApplicationClass;
+	}
 
 }
