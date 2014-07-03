@@ -49,6 +49,9 @@ public class PallasCdiExtension implements Extension {
 	public <T extends WebApplication> void processApplication(@Observes @WithAnnotations(Application.class) final ProcessAnnotatedType<T> pat) {
 
 		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
+		if (!javaClass.isAnnotationPresent(Application.class)) {
+			return; // double check
+		}
 
 		if (null != webApplicationClass) {
 			throw new DeploymentException(WebApplication.class.getSimpleName() + " is defined more then once: " + webApplicationClass.getCanonicalName() + ", "
@@ -69,7 +72,7 @@ public class PallasCdiExtension implements Extension {
 	private void checkApplication() {
 
 		if (null == webApplicationClass) {
-			throw new DeploymentException("Specify application class. See: " + WebApplication.class.getCanonicalName());
+			webApplicationClass = WebApplication.class; // default application class
 		}
 	}
 

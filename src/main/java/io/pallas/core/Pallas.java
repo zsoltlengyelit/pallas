@@ -1,9 +1,8 @@
 package io.pallas.core;
 
-import io.pallas.core.annotations.Application;
+import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
 
-import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
 /**
@@ -13,19 +12,18 @@ import javax.inject.Inject;
  */
 public class Pallas {
 
-    public static final String NAME = "Pallas";
+	public static final String NAME = "Pallas";
 
-    public static final String VERSION = "0.0.1-alfa";
+	public static final String VERSION = "0.0.1-alfa";
 
-    @Inject
-    @Application
-    private Instance<WebApplication> application;
+	@Inject
+	private LookupService lookupService;
 
-    @Inject
-    private PallasCdiExtension cdiExtension;
+	@Inject
+	private PallasCdiExtension cdiExtension;
 
-    public WebApplication getApplication() {
-        return application.get();
-    }
+	public WebApplication getApplication() {
+		return lookupService.lookup(cdiExtension.getWebApplicationClass());
+	}
 
 }

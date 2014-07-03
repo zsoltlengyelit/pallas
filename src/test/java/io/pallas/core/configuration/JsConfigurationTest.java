@@ -1,17 +1,11 @@
 package io.pallas.core.configuration;
 
-import io.pallas.core.WebApplication;
-import io.pallas.core.cdi.LookupService;
-import io.pallas.core.cdi.PallasCdiExtension;
-import io.pallas.core.util.LoggerProducer;
+import io.pallas.core.testutil.ArchiveUtil;
 
-import javax.enterprise.inject.spi.Extension;
 import javax.inject.Inject;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.ShrinkWrap;
-import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,10 +19,7 @@ public class JsConfigurationTest {
 
 	@Deployment
 	public static WebArchive deploy() {
-		return ShrinkWrap.create(WebArchive.class, "pallas-core.war").addClasses(WebApplication.class, LookupService.class, LoggerProducer.class, JsConfiguration.class)
-		        .addAsManifestResource(new StringAsset(PallasCdiExtension.class.getCanonicalName()), "META-INF/services/javax.enterprise.inject.spi.Extension")
-		        .addAsServiceProvider(Extension.class, PallasCdiExtension.class).addAsResource("META-INF/beans.xml", "META-INF/beans.xml");
-
+		return ArchiveUtil.defaultWithClasses(JsConfiguration.class);
 	}
 
 	@Test
