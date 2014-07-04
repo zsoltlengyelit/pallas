@@ -6,9 +6,12 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<version.tomcat>7.0.37</version.tomcat>
+	</properties>
+
 	<dependencies>
-
-
 
 		<dependency>
 			<groupId>javax</groupId>
@@ -79,6 +82,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.jboss.shrinkwrap.resolver</groupId>
+			<artifactId>shrinkwrap-resolver-depchain</artifactId>
+			<type>pom</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.jboss.arquillian.junit</groupId>
 			<artifactId>arquillian-junit-container</artifactId>
 			<scope>test</scope>
@@ -95,10 +105,37 @@
 
 		<dependency>
 			<groupId>org.jboss.arquillian.container</groupId>
-			<artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
-			<version>1.0.0.CR8</version>
+			<artifactId>arquillian-tomcat-embedded-7</artifactId>
+			<version>1.0.0.CR4</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.weld.servlet</groupId>
+			<artifactId>weld-servlet</artifactId>
+			<version>1.1.10.Final</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-catalina</artifactId>
+			<version>${version.tomcat}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-coyote</artifactId>
+			<version>${version.tomcat}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tomcat</groupId>
+			<artifactId>tomcat-jasper</artifactId>
+			<version>${version.tomcat}</version>
+			<scope>test</scope>
+		</dependency>
+
 
 		<dependency>
 			<groupId>org.jboss.weld</groupId>
@@ -113,6 +150,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>org.jboss.shrinkwrap.resolver</groupId>
+				<artifactId>shrinkwrap-resolver-bom</artifactId>
+				<version>2.1.1</version>
+				<scope>import</scope>
+				<type>pom</type>
+			</dependency>
 			<dependency>
 				<groupId>org.jboss.arquillian</groupId>
 				<artifactId>arquillian-bom</artifactId>
@@ -154,8 +198,8 @@
 				</dependency>
 				<dependency>
 					<groupId>org.jboss.arquillian.container</groupId>
-					<artifactId>arquillian-weld-ee-embedded-1.1</artifactId>
-					<version>1.0.0.CR3</version>
+					<artifactId>arquillian-tomcat-embedded-7</artifactId>
+					<version>1.0.0.CR4</version>
 					<scope>test</scope>
 				</dependency>
 				<dependency>
