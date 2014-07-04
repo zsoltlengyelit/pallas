@@ -4,7 +4,10 @@ import io.pallas.core.Application;
 import io.pallas.core.WebApplication;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
+import io.pallas.core.sample.MainServlet;
 import io.pallas.core.util.LoggerProducer;
+
+import java.io.File;
 
 import javax.enterprise.inject.spi.Extension;
 
@@ -12,6 +15,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.resolver.api.maven.Maven;
 
 public class ArchiveUtil {
 
@@ -20,10 +24,15 @@ public class ArchiveUtil {
 	 * @param classes additional classes
 	 * @return web archive
 	 */
-	public static WebArchive withClasses(Class<?>... classes) {
-		return ShrinkWrap.create(WebArchive.class, "pallas-core.war").addClasses(classes)
+	public static WebArchive build(Class<?>... classes) {
+		File[] libs = Maven.resolver().loadPomFromFile("pom.xml").resolve("org.jboss.weld.servlet:weld-servlet").withTransitivity().asFile();
+
+		return ShrinkWrap.create(WebArchive.class, "pallas-core.war")
 		        .addAsManifestResource(new StringAsset(PallasCdiExtension.class.getCanonicalName()), "META-INF/services/javax.enterprise.inject.spi.Extension")
-		        .addAsServiceProvider(Extension.class, PallasCdiExtension.class).addAsResource("META-INF/beans.xml", "META-INF/beans.xml");
+		        .addAsManifestResource("context.xml", "context.xml").setWebXML("web.xml").addAsServiceProvider(Extension.class, PallasCdiExtension.class)
+		        .addAsManifestResource("org.jboss.weld.environment.Container", "services/org.jboss.weld.environment.Container").addClass(MainServlet.class).addAsLibraries(libs)
+		        .addAsResource("META-INF/beans.xml", "META-INF/beans.xml").addClasses(classes);
+
 	}
 
 	/**
@@ -31,8 +40,8 @@ public class ArchiveUtil {
 	 * @param classes additional classes
 	 * @return web archive
 	 */
-	public static WebArchive defaultWithClasses(Class<?>... classes) {
+	public static WebArchive buildDefault(Class<?>... classes) {
 		Class<?>[] defaultClasses = { Application.class, WebApplication.class, LookupService.class, LoggerProducer.class };
-		return withClasses(ArrayUtils.addAll(classes, defaultClasses));
+		return build(ArrayUtils.addAll(classes, defaultClasses));
 	}
 }

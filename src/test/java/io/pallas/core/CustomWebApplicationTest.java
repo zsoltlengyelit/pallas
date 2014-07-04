@@ -24,7 +24,7 @@ public class CustomWebApplicationTest {
 
 	@Deployment
 	public static WebArchive deploy() {
-		return ArchiveUtil.defaultWithClasses(Pallas.class, CustomApplication.class);
+		return ArchiveUtil.buildDefault(Pallas.class, CustomApplication.class);
 	}
 
 	@Test

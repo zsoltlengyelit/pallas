@@ -19,7 +19,7 @@ public class JsConfigurationTest {
 
 	@Deployment
 	public static WebArchive deploy() {
-		return ArchiveUtil.defaultWithClasses(JsConfiguration.class);
+		return ArchiveUtil.buildDefault(JsConfiguration.class);
 	}
 
 	@Test

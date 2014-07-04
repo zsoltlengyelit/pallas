@@ -23,7 +23,7 @@ public class WebApplicationTest {
 
 	@Deployment
 	public static WebArchive deploy() {
-		return ArchiveUtil.defaultWithClasses(Pallas.class);
+		return ArchiveUtil.buildDefault(Pallas.class);
 	}
 
 	@Test
