@@ -4,20 +4,17 @@
 	xmlns="http://jboss.org/schema/arquillian"
 	xsi:schemaLocation="http://jboss.org/schema/arquillian http://jboss.org/schema/arquillian/arquillian_1_0.xsd">
 
-<!-- 	<defaultProtocol type="Servlet 3.0" /> -->
+	<defaultProtocol type="Servlet 3.0" />
 
-	<engine>
-		<property name="deploymentExportPath">target</property>
-	</engine>
 	<container
-		qualifier="jbossas-7-managed"
+		qualifier="wildfly-as-managed"
 		default="true">
-		<configuration>		
-			<property name="jbossHome">C:/work/server/jboss-as-7.1.1.Final</property>	
-			<property name="bindHttpPort">8889</property>
-			<property name="unpackArchive">true</property>
+		<configuration>
+			<property name="jbossHome">C:/work/server/wildfly-8.0.0.Final</property>
+			<property name="javaVmArguments">-Djboss.socket.binding.port-offset=9 -Djboss.management.native.port=9080 -Xmx512m -XX:MaxPermSize=512m</property>
+			<property name="managementPort">9090</property>
 		</configuration>
 	</container>
 
-	
+
 </arquillian>

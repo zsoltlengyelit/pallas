@@ -31,7 +31,7 @@ public class ArchiveUtil {
 		        .addAsManifestResource(new StringAsset(PallasCdiExtension.class.getCanonicalName()), "META-INF/services/javax.enterprise.inject.spi.Extension")
 		        .addAsManifestResource("context.xml", "context.xml").setWebXML("web.xml").addAsServiceProvider(Extension.class, PallasCdiExtension.class)
 		        .addAsManifestResource("org.jboss.weld.environment.Container", "services/org.jboss.weld.environment.Container").addClass(MainServlet.class).addAsLibraries(libs)
-		        .addAsResource("META-INF/beans.xml", "META-INF/beans.xml").addClasses(classes);
+		        .addAsResource("META-INF/beans.xml", "WEB-INF/beans.xml").addClasses(classes);
 
 	}
 

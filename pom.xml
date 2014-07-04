@@ -11,6 +11,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<version.tomcat>7.0.37</version.tomcat>
+		<version.wildfly>8.0.0.Final</version.wildfly>
 	</properties>
 
 	<dependencies>
@@ -112,12 +113,9 @@
 		</dependency>
 
 		<dependency>
-			<!-- <groupId>org.jboss.arquillian.container</groupId> -->
-			<!-- <artifactId>arquillian-tomcat-embedded-7</artifactId> -->
-			<!-- <version>1.0.0.CR4</version> -->
-			<groupId>org.jboss.as</groupId>
-			<artifactId>jboss-as-arquillian-container-managed</artifactId>
-			<version>7.1.1.Final</version>
+			<groupId>org.wildfly</groupId>
+			<artifactId>wildfly-arquillian-container-managed</artifactId>
+			<version>${version.wildfly}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -208,12 +206,9 @@
 					<scope>provided</scope>
 				</dependency>
 				<dependency>
-					<!-- <groupId>org.jboss.arquillian.container</groupId> -->
-					<!-- <artifactId>arquillian-tomcat-embedded-7</artifactId> -->
-					<!-- <version>1.0.0.CR4</version> -->
-					<groupId>org.jboss.as</groupId>
-					<artifactId>jboss-as-arquillian-container-managed</artifactId>
-					<version>7.1.1.Final</version>
+					<groupId>org.wildfly</groupId>
+					<artifactId>wildfly-arquillian-container-managed</artifactId>
+					<version>${version.wildfly}</version>
 					<scope>test</scope>
 				</dependency>
 				<dependency>
