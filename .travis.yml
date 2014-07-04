@@ -1,5 +1,2 @@
 language: java
 script: "mvn test -Ptest"
-before_script:
-  - wget http://download.jboss.org/wildfly/8.0.0.Final/wildfly-8.0.0.Final.tar.gz
-  - tar zxvf wildfly-8.0.0.Final.tar.gz
