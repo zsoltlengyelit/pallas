@@ -1,8 +1,9 @@
-package io.pallas.core;
+package io.pallas.core.test;
 
+import io.pallas.core.Pallas;
+import io.pallas.core.WebApplication;
 import io.pallas.core.cdi.PallasCdiExtension;
-import io.pallas.core.sample.CustomApplication;
-import io.pallas.core.testutil.ArchiveUtil;
+import io.pallas.core.test.testutil.ArchiveUtil;
 
 import javax.inject.Inject;
 
@@ -14,7 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(Arquillian.class)
-public class CustomWebApplicationTest {
+public class WebApplicationTest {
 
 	@Inject
 	private PallasCdiExtension cdiExtension;
@@ -24,14 +25,14 @@ public class CustomWebApplicationTest {
 
 	@Deployment
 	public static WebArchive deploy() {
-		return ArchiveUtil.buildDefault(Pallas.class, CustomApplication.class);
+		return ArchiveUtil.buildDefault(Pallas.class);
 	}
 
 	@Test
 	public void testFoundApplication() {
-		Assert.assertTrue(cdiExtension.getWebApplicationClass() == CustomApplication.class);
 		Assert.assertNotNull(pallas.getApplication());
-		Assert.assertTrue(pallas.getApplication().getClass() == CustomApplication.class);
+		Assert.assertTrue(cdiExtension.getWebApplicationClass() == WebApplication.class);
+		Assert.assertTrue(pallas.getApplication().getClass() == WebApplication.class);
 	}
 
 }

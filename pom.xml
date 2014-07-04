@@ -9,8 +9,7 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<version.tomcat>7.0.37</version.tomcat>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>		
 		<version.wildfly>8.0.0.Final</version.wildfly>
 	</properties>
 
@@ -106,11 +105,12 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-client</artifactId>
-			<version>3.0.8.Final</version>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.4</version>
 			<scope>test</scope>
 		</dependency>
+
 
 		<dependency>
 			<groupId>org.wildfly</groupId>
@@ -119,39 +119,20 @@
 			<scope>test</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.jboss.weld.servlet</groupId>
-			<artifactId>weld-servlet</artifactId>
-			<version>1.1.10.Final</version>
-			<scope>test</scope>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.jboss.weld.servlet</groupId> -->
+<!-- 			<artifactId>weld-servlet</artifactId> -->
+<!-- 			<version>1.1.10.Final</version> -->
+<!-- 			<scope>test</scope> -->
+<!-- 		</dependency> -->
 
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-catalina</artifactId>
-			<version>${version.tomcat}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-coyote</artifactId>
-			<version>${version.tomcat}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.tomcat</groupId>
-			<artifactId>tomcat-jasper</artifactId>
-			<version>${version.tomcat}</version>
-			<scope>test</scope>
-		</dependency>
-
-
-		<dependency>
-			<groupId>org.jboss.weld</groupId>
-			<artifactId>weld-core</artifactId>
-			<version>2.2.2.Final</version>
-			<scope>test</scope>
-		</dependency>
+	
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.jboss.weld</groupId> -->
+<!-- 			<artifactId>weld-core</artifactId> -->
+<!-- 			<version>2.2.2.Final</version> -->
+<!-- 			<scope>test</scope> -->
+<!-- 		</dependency> -->
 
 
 	</dependencies>
@@ -240,9 +221,9 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>2.17</version>
 				<configuration>
-					<includes>
-						<include>**/QueryParamTest.java</include>
-					</includes>
+<!-- 					<includes> -->
+<!-- 						<include>**/QueryParamTest.java</include> -->
+<!-- 					</includes> -->
 				</configuration>
 			</plugin>
 		</plugins>

@@ -1,6 +1,8 @@
-package io.pallas.core.configuration;
+package io.pallas.core.test.configuration;
 
-import io.pallas.core.testutil.ArchiveUtil;
+import io.pallas.core.configuration.Configuration;
+import io.pallas.core.configuration.JsConfiguration;
+import io.pallas.core.test.testutil.ArchiveUtil;
 
 import javax.inject.Inject;
 
@@ -19,7 +21,7 @@ public class JsConfigurationTest {
 
 	@Deployment
 	public static WebArchive deploy() {
-		return ArchiveUtil.buildDefault(JsConfiguration.class);
+		return ArchiveUtil.buildDefault(JsConfiguration.class, Configuration.class);
 	}
 
 	@Test
