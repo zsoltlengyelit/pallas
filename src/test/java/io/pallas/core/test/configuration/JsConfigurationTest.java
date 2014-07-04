@@ -1,6 +1,5 @@
 package io.pallas.core.test.configuration;
 
-import io.pallas.core.configuration.Configuration;
 import io.pallas.core.configuration.JsConfiguration;
 import io.pallas.core.test.testutil.ArchiveUtil;
 
@@ -8,7 +7,7 @@ import javax.inject.Inject;
 
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
-import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -20,8 +19,8 @@ public class JsConfigurationTest {
 	private JsConfiguration jsConfiguration;
 
 	@Deployment
-	public static WebArchive deploy() {
-		return ArchiveUtil.buildDefault(JsConfiguration.class, Configuration.class);
+	public static JavaArchive deploy() {
+		return ArchiveUtil.build(JsConfiguration.class);
 	}
 
 	@Test
