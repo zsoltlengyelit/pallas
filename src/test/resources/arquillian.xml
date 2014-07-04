@@ -13,6 +13,7 @@
 			<property name="jbossHome">wildfly-8.0.0.Final</property>
 			<property name="javaVmArguments">-Djboss.socket.binding.port-offset=9 -Djboss.management.native.port=9080 -Xmx512m -XX:MaxPermSize=512m</property>
 			<property name="managementPort">9090</property>
+			<property name="startupTimeoutInSeconds">120</property>
 		</configuration>
 	</container>
 
