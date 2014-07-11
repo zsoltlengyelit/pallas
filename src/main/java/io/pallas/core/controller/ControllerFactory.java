@@ -1,9 +1,8 @@
 package io.pallas.core.controller;
 
-import io.pallas.core.annotations.ComponentName;
+import io.pallas.core.annotations.Component;
 import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.DefaultAction;
-import io.pallas.core.annotations.PostConfiguration;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
 
@@ -23,213 +22,208 @@ import com.google.common.base.Predicate;
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  *
  */
-@ComponentName("controllerFactory")
+@Component("controllerFactory")
 public class ControllerFactory {
 
-    private static final String DEFAULT_ACTION_NAME = "index";
+	private static final String DEFAULT_ACTION_NAME = "index";
 
-    @Inject
-    private PallasCdiExtension cdiExtension;
+	@Inject
+	private PallasCdiExtension cdiExtension;
 
-    /** Dynamic CDI injector. */
-    @Inject
-    private LookupService lookupService;
+	/** Dynamic CDI injector. */
+	@Inject
+	private LookupService lookupService;
 
-    @PostConfiguration
-    public void init() {
+	/**
+	 *
+	 * @param path
+	 *            URL path
+	 * @return controller and action descriptor
+	 */
+	public ControllerAction createController(final String path) {
+		String realPath = path == null ? "" : path;
 
-    }
+		if (realPath.startsWith("/")) {
+			realPath = realPath.substring(1);
+		}
 
-    /**
-     *
-     * @param path
-     *            URL path
-     * @return controller and action descriptor
-     */
-    public ControllerAction createController(final String path) {
-        String realPath = path == null ? "" : path;
+		if (StringUtils.isEmpty(realPath)) {
+			return getDefaultControllerAction();
+		}
 
-        if (realPath.startsWith("/")) {
-            realPath = realPath.substring(1);
-        }
+		final Set<Class<?>> controllerClasses = cdiExtension.getControllers();
 
-        if (StringUtils.isEmpty(realPath)) {
-            return getDefaultControllerAction();
-        }
+		for (final Class<?> controllerClass : controllerClasses) {
 
-        final Set<Class<?>> controllerClasses = cdiExtension.getControllers();
+			final ControllerAction controllerAction = getMatchingController(controllerClass, realPath);
 
-        for (final Class<?> controllerClass : controllerClasses) {
+			if (null != controllerAction) {
+				return controllerAction;
+			}
+		}
 
-            final ControllerAction controllerAction = getMatchingController(controllerClass, realPath);
+		return getErrorHandlerController();
+	}
 
-            if (null != controllerAction) {
-                return controllerAction;
-            }
-        }
+	private ControllerAction getDefaultControllerAction() {
 
-        return getErrorHandlerController();
-    }
+		final Object controller = getDefaultController();
+		if (null == controller) {
+			return getErrorHandlerController();
+		}
+		final Method defaultActionName = getDefaultAction(controller.getClass());
 
-    private ControllerAction getDefaultControllerAction() {
+		return new ControllerAction(controller, defaultActionName);
+	}
 
-        final Object controller = getDefaultController();
-        if (null == controller) {
-            return getErrorHandlerController();
-        }
-        final Method defaultActionName = getDefaultAction(controller.getClass());
+	private ControllerAction getErrorHandlerController() {
+		return null;
+	}
 
-        return new ControllerAction(controller, defaultActionName);
-    }
+	@SuppressWarnings("unchecked")
+	private Method getDefaultAction(final Class<?> controllerClass) {
 
-    private ControllerAction getErrorHandlerController() {
-        return null;
-    }
+		final Set<Method> methodsAnnotatedWith = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withAnnotation(DefaultAction.class), publicModifierPredicate());
 
-    @SuppressWarnings("unchecked")
-    private Method getDefaultAction(final Class<?> controllerClass) {
+		if (methodsAnnotatedWith.isEmpty()) {
 
-        final Set<Method> methodsAnnotatedWith = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withAnnotation(DefaultAction.class), publicModifierPredicate());
+			final Set<Method> methods = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withName(DEFAULT_ACTION_NAME), publicModifierPredicate());
 
-        if (methodsAnnotatedWith.isEmpty()) {
+			if (methods.isEmpty()) {
+				throw new RoutingException("Cannot find default action for controller:" + controllerClass.getCanonicalName());
+			}
 
-            final Set<Method> methods = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withName(DEFAULT_ACTION_NAME), publicModifierPredicate());
+			if (methods.size() > 1) {
+				throwMultipleDefaultActionError(controllerClass);
+			}
 
-            if (methods.isEmpty()) {
-                throw new RoutingException("Cannot find default action for controller:" + controllerClass.getCanonicalName());
-            }
+			return methods.iterator().next();
 
-            if (methods.size() > 1) {
-                throwMultipleDefaultActionError(controllerClass);
-            }
+		} else {
 
-            return methods.iterator().next();
+			if (methodsAnnotatedWith.size() > 1) {
+				throwMultipleDefaultActionError(controllerClass);
+			}
 
-        } else {
+			return methodsAnnotatedWith.iterator().next();
+		}
 
-            if (methodsAnnotatedWith.size() > 1) {
-                throwMultipleDefaultActionError(controllerClass);
-            }
+	}
 
-            return methodsAnnotatedWith.iterator().next();
-        }
+	private void throwMultipleDefaultActionError(final Class<?> controllerClass) {
+		throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has multiple default action.");
+	}
 
-    }
+	private ControllerAction getMatchingController(final Class<?> controllerClass, final String path) {
 
-    private void throwMultipleDefaultActionError(final Class<?> controllerClass) {
-        throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has multiple default action.");
-    }
+		final String[] pathParts = path.split("/");
+		if (pathParts.length == 0) {
+			return getDefaultControllerAction();
+		}
 
-    private ControllerAction getMatchingController(final Class<?> controllerClass, final String path) {
+		final String controllerName = getControllerName(controllerClass);
 
-        final String[] pathParts = path.split("/");
-        if (pathParts.length == 0) {
-            return getDefaultControllerAction();
-        }
+		switch (pathParts.length) {
+		case 1:
+			if (controllerName.equals(pathParts[0])) {
 
-        final String controllerName = getControllerName(controllerClass);
+				final Object controller = getControllerInstance(controllerClass);
+				final Method action = getDefaultAction(controllerClass);
+				return new ControllerAction(controller, action);
+			}
+			break;
+		case 2:
+			if (controllerName.equals(pathParts[0])) {
+				final Object controller = getControllerInstance(controllerClass);
+				final Method action = getNamedAction(controllerClass, pathParts[1]);
+				return new ControllerAction(controller, action);
+			}
+			break;
 
-        switch (pathParts.length) {
-        case 1:
-            if (controllerName.equals(pathParts[0])) {
+		default:
+			throw new io.pallas.core.execution.ServerException("Unimplemented function");
+		}
 
-                final Object controller = getControllerInstance(controllerClass);
-                final Method action = getDefaultAction(controllerClass);
-                return new ControllerAction(controller, action);
-            }
-            break;
-        case 2:
-            if (controllerName.equals(pathParts[0])) {
-                final Object controller = getControllerInstance(controllerClass);
-                final Method action = getNamedAction(controllerClass, pathParts[1]);
-                return new ControllerAction(controller, action);
-            }
-            break;
+		return null;
+	}
 
-        default:
-            throw new io.pallas.core.execution.ServerException("Unimplemented function");
-        }
+	@SuppressWarnings("unchecked")
+	private Method getNamedAction(final Class<?> controllerClass, final String name) {
 
-        return null;
-    }
+		final Set<Method> methods = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withName(name), publicModifierPredicate());
 
-    @SuppressWarnings("unchecked")
-    private Method getNamedAction(final Class<?> controllerClass, final String name) {
+		if (methods.isEmpty()) {
+			throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has no public method with name: '" + name + "'");
+		}
 
-        final Set<Method> methods = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withName(name), publicModifierPredicate());
+		if (methods.size() > 1) {
+			throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has multiple method with name: '" + name + "'");
+		}
 
-        if (methods.isEmpty()) {
-            throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has no public method with name: '" + name + "'");
-        }
+		return methods.iterator().next();
 
-        if (methods.size() > 1) {
-            throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has multiple method with name: '" + name + "'");
-        }
+	}
 
-        return methods.iterator().next();
+	private Predicate<Member> publicModifierPredicate() {
+		return ReflectionUtils.withModifier(java.lang.reflect.Modifier.PUBLIC);
+	}
 
-    }
+	private Object getDefaultController() {
 
-    private Predicate<Member> publicModifierPredicate() {
-        return ReflectionUtils.withModifier(java.lang.reflect.Modifier.PUBLIC);
-    }
+		final Set<Class<?>> controllerClasses = cdiExtension.getControllers();
+		for (final Class<?> controllerClass : controllerClasses) {
 
-    private Object getDefaultController() {
+			final Controller annotation = controllerClass.getAnnotation(Controller.class);
+			final String name = annotation.value();
 
-        final Set<Class<?>> controllerClasses = cdiExtension.getControllers();
-        for (final Class<?> controllerClass : controllerClasses) {
+			if ("".equals(name) || "/".equals(name)) {
 
-            final Controller annotation = controllerClass.getAnnotation(Controller.class);
-            final String name = annotation.value();
+				return getControllerInstance(controllerClass);
+			}
+		}
 
-            if ("".equals(name) || "/".equals(name)) {
+		throw new RoutingException("Cannot found default controller");
+	}
 
-                return getControllerInstance(controllerClass);
-            }
-        }
+	/**
+	 *
+	 * @param controllerClass
+	 * @return
+	 */
+	private Object getControllerInstance(final Class<?> controllerClass) {
+		return lookupService.lookup(controllerClass);
+	}
 
-        throw new RoutingException("Cannot found default controller");
-    }
+	private String getControllerName(final Class<?> controllerClass) {
 
-    /**
-     *
-     * @param controllerClass
-     * @return
-     */
-    private Object getControllerInstance(final Class<?> controllerClass) {
-        return lookupService.lookup(controllerClass);
-    }
+		// controller annotation is always present on controller
+		final Controller controllerAnnotation = controllerClass.getAnnotation(Controller.class);
 
-    private String getControllerName(final Class<?> controllerClass) {
+		String controllerName = controllerAnnotation.value();
+		if (StringUtils.isEmpty(controllerName)) {
 
-        // controller annotation is always present on controller
-        final Controller controllerAnnotation = controllerClass.getAnnotation(Controller.class);
+			final String simpleName = controllerClass.getSimpleName();
+			if (simpleName.endsWith("Controller")) {
+				controllerName = simpleName.replace("Controller", ""); // cut
+				// Controller
+				// suffix
+			} else {
+				controllerName = simpleName; // let be the class name the
+				// controller name
+			}
+		}
 
-        String controllerName = controllerAnnotation.value();
-        if (StringUtils.isEmpty(controllerName)) {
+		return canonicalControllerName(controllerName);
+	}
 
-            final String simpleName = controllerClass.getSimpleName();
-            if (simpleName.endsWith("Controller")) {
-                controllerName = simpleName.replace("Controller", ""); // cut
-                // Controller
-                // suffix
-            } else {
-                controllerName = simpleName; // let be the class name the
-                // controller name
-            }
-        }
+	private String canonicalControllerName(final String name) {
 
-        return canonicalControllerName(controllerName);
-    }
+		String canonical = name;
+		if (canonical.startsWith("/")) {
+			canonical = canonical.substring(1);
+		}
 
-    private String canonicalControllerName(final String name) {
-
-        String canonical = name;
-        if (canonical.startsWith("/")) {
-            canonical = canonical.substring(1);
-        }
-
-        return StringUtils.uncapitalize(canonical);
-    }
+		return StringUtils.uncapitalize(canonical);
+	}
 
 }

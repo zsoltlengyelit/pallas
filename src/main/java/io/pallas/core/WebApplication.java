@@ -1,9 +1,5 @@
 package io.pallas.core;
 
-import io.pallas.core.annotations.Component;
-import io.pallas.core.controller.ControllerFactory;
-
-import javax.enterprise.inject.Produces;
 
 /**
  * Base web application.
@@ -12,11 +8,5 @@ import javax.enterprise.inject.Produces;
  *
  */
 public class WebApplication extends Application {
-
-    @Produces
-    @Component
-    public ControllerFactory createControllerFactory() {
-        return getComponent(ControllerFactory.class);
-    }
 
 }

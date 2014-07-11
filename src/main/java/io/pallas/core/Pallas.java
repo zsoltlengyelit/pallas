@@ -3,6 +3,7 @@ package io.pallas.core;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
 
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 
 /**
@@ -22,6 +23,7 @@ public class Pallas {
 	@Inject
 	private PallasCdiExtension cdiExtension;
 
+	@Produces
 	public WebApplication getApplication() {
 		return lookupService.lookup(cdiExtension.getWebApplicationClass());
 	}

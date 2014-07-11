@@ -1,8 +1,5 @@
 package io.pallas.core.annotations;
 
-import static java.lang.annotation.ElementType.FIELD;
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -11,18 +8,24 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import javax.inject.Qualifier;
+import javax.enterprise.util.Nonbinding;
+import javax.interceptor.InterceptorBinding;
 
 /**
+ * Specifies a component family.
  *
- * @author Zsolti
+ * In configuration file this name identifies the component.
+ *
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  *
  */
-@Qualifier
+@InterceptorBinding
 @Inherited
-@Target({ TYPE, METHOD, PARAMETER, FIELD })
+@Target({ TYPE })
 @Retention(RUNTIME)
 @Documented
 public @interface Component {
 
+	@Nonbinding
+	String value() default "";
 }
