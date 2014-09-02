@@ -3,8 +3,6 @@ package io.pallas.core.configuration;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.annotation.PostConstruct;
@@ -17,9 +15,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 /**
- *
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
- *
  */
 public class JsConfiguration implements Configuration {
 
@@ -39,9 +35,9 @@ public class JsConfiguration implements Configuration {
     private void init() {
 
         final InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE); // lookup for overrided configuration
-        
+
         if (null == resourceAsStream) {
-            logger.info("No configuration file found.");
+            //  logger.info("No configuration file found.");
             return;
         }
 
