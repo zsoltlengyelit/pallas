@@ -22,13 +22,15 @@ public class ConfigurationProducer {
     @Produces
     @ConfProperty(VIEW_FILE_SUFFIX_CONF_PROPERTY)
     public String viewFileSuffix() {
-        return Optional.fromNullable(configuration.getString(VIEW_FILE_SUFFIX_CONF_PROPERTY)).or(DEFAULT_VIEW_FILE_SUFFIX);
+        final String reference = configuration.getString(VIEW_FILE_SUFFIX_CONF_PROPERTY);
+        return Optional.fromNullable(reference).or(DEFAULT_VIEW_FILE_SUFFIX);
     }
 
     @Produces
     @ConfProperty(VIEW_PATH_CONF_PROPERTY)
     public String viewBasePath() {
-        return Optional.fromNullable(configuration.getString(VIEW_PATH_CONF_PROPERTY)).or(DEFAULT_VIEW_PATH);
+        final String reference = configuration.getString(VIEW_PATH_CONF_PROPERTY);
+        return Optional.fromNullable(reference).or(DEFAULT_VIEW_PATH);
     }
 
 }

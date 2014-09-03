@@ -23,7 +23,7 @@ public class JsConfiguration implements Configuration {
     private static final String CONFIGURATION_FILE = "configuration.js";
 
     @Inject
-    private Logger logger;
+    private Logger              logger;
 
     /**
      * The parse content of configuration.
@@ -71,12 +71,17 @@ public class JsConfiguration implements Configuration {
         Object base = configuration;
         for (final String part : parts) {
 
+            if (null == base) {
+                break;
+            }
             if (base instanceof Map) {
                 base = ((Map<String, Object>) base).get(part);
-            } else {
-                return null;
             }
+        }
 
+        if (null == base) {
+            // finally try to find the path string
+            return (T) configuration.get(path);
         }
 
         return (T) base;

@@ -25,7 +25,7 @@ public class CdiWiidgetContext extends DefaultWiidgetContext {
 
         try {
             return getBeanByName(variable);
-        } finally {
+        } catch (final Throwable e) {
             return null;
         }
     }
