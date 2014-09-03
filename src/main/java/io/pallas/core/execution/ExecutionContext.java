@@ -11,6 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,98 +21,115 @@ import org.apache.log4j.Logger;
 @RequestScoped
 public class ExecutionContext {
 
-	@Inject
-	private Logger logger;
+    @Inject
+    private Logger logger;
 
-	@Inject
-	private ControllerFactory controllerFactory;
+    @Inject
+    private ControllerFactory controllerFactory;
 
-	@Inject
-	private UrlManager urlManager;
+    @Inject
+    private UrlManager urlManager;
 
-	@Inject
-	private ActionParamsProvider actionParamsProvider;
+    @Inject
+    private ActionParamsProvider actionParamsProvider;
 
-	/**
-	 *
-	 * @param request
-	 * @param response
-	 */
-	public void execute(final HttpServletRequest request, final HttpServletResponse response) {
+    private Request request = null;
 
-		final String pathInfo = request.getPathInfo();
+    /**
+     *
+     * @param httpRequest
+     * @param response
+     */
+    public void execute(final HttpServletRequest httpRequest, final HttpServletResponse response) {
 
-		final ActionRequest parseRequest = urlManager.parseRequest(request);
+        try {
+            this.request = new Request(httpRequest);
 
-		final ControllerAction controller = controllerFactory.createController(pathInfo);
+            final String pathInfo = httpRequest.getPathInfo();
 
-		if (null == controller) {
+            final ActionRequest parseRequest = urlManager.parseRequest(httpRequest);
 
-			try {
-				response.getWriter().append("Cannot found action");
-			} catch (final IOException e) {
-				logger.error(e);
-			}
+            final ControllerAction controller = controllerFactory.createController(pathInfo);
 
-		} else {
+            if (null == controller) {
 
-			try {
-				final Object result = invokeController(controller, request);
-				handleResult(response, result);
-			} catch (final ServerException serverException) {
-				handleServerError(serverException, response);
-			}
-		}
+                try {
+                    response.getWriter().append("Cannot found action");
+                } catch (final IOException e) {
+                    logger.error(e);
+                }
 
-	}
+            } else {
 
-	private void handleServerError(final ServerException serverException, final HttpServletResponse response) {
+                try {
+                    final Object result = invokeController(controller, httpRequest);
+                    handleResult(response, result);
+                } catch (final ServerException serverException) {
+                    handleServerError(serverException, response);
+                }
+            }
 
-		try {
+        } finally {
+            request = null;
+        }
 
-			response.getWriter().append(serverException.getLocalizedMessage());
-			response.getWriter().println();
-			serverException.printStackTrace(response.getWriter());
-		} catch (final IOException e) {
-			logger.error(e);
-		}
-	}
+    }
 
-	private void handleResult(final HttpServletResponse response, final Object result) {
+    @Produces
+    public Request produceRequest() {
+        return request;
+    }
 
-		if (null == result) {
-			return;
-		}
-		if (result instanceof String) {
-			try {
-				response.getWriter().append((String) result);
-			} catch (final IOException e) {
-				throw new ServerException("Cannot write response", e);
-			}
-		} else {
-			throw new ServerException("Cannot handle result type: " + result, null);
-		}
+    private void handleServerError(final ServerException serverException, final HttpServletResponse response) {
 
-	}
+        try {
 
-	private Object invokeController(final ControllerAction controller, final HttpServletRequest request) {
+            response.getWriter().append(serverException.getLocalizedMessage());
+            response.getWriter().println();
+            serverException.printStackTrace(response.getWriter());
 
-		try {
-			// TODO params
+            serverException.printStackTrace(); // TODO
+        } catch (final IOException e) {
+            logger.error(e);
+            e.printStackTrace(); // TODO
+        }
+    }
 
-			final Method action = controller.getAction();
+    private void handleResult(final HttpServletResponse response, final Object result) {
 
-			final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
+        if (null == result) {
+            return;
+        }
+        if (result instanceof String) {
+            try {
+                response.getWriter().append((String) result);
+            } catch (final IOException e) {
+                throw new ServerException("Cannot write response", e);
+            }
+        } else {
+            throw new ServerException("Cannot handle result type: " + result, null);
+        }
 
-			final Object object = controller.getController();
+    }
 
-			final Object result = action.invoke(object, parameters);
-			return result;
+    private Object invokeController(final ControllerAction controller, final HttpServletRequest request) {
 
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
-			throw new ServerException("Error while call controller action", exception);
-		}
+        try {
+            // TODO params
 
-	}
+            final Method action = controller.getAction();
+
+            final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
+
+            final Object object = controller.getController();
+
+            final Object result = action.invoke(object, parameters);
+            return result;
+
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
+            throw new ServerException("Error while call controller action", exception);
+        }
+
+    }
 
 }

@@ -60,7 +60,7 @@ public class JsConfiguration implements Configuration {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Object getValue(final String path) {
+    public <T> T getValue(final String path) {
 
         if (null == configuration) {
             return null;
@@ -79,7 +79,7 @@ public class JsConfiguration implements Configuration {
 
         }
 
-        return base;
+        return (T) base;
     }
 
     @Override

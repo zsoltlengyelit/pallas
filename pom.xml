@@ -6,9 +6,11 @@
 	<version>0.1.0</version>
 	<packaging>jar</packaging>
 
+	<properties>
+		<rewrite.version>2.0.12.Final</rewrite.version>
+	</properties>
+
 	<dependencies>
-
-
 
 		<dependency>
 			<groupId>javax</groupId>
@@ -52,6 +54,18 @@
 			<artifactId>commons-io</artifactId>
 			<version>2.4</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.ocpsoft.rewrite</groupId>
+			<artifactId>rewrite-servlet</artifactId>
+			<version>${rewrite.version}</version>
+		</dependency>
+
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.ocpsoft.rewrite</groupId> -->
+<!-- 			<artifactId>rewrite-integration-cdi</artifactId> -->
+<!-- 			<version>${rewrite.version}</version> -->
+<!-- 		</dependency> -->
 
 		<!-- Testing -->
 

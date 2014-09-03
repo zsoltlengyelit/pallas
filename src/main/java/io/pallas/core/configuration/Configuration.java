@@ -8,7 +8,7 @@ package io.pallas.core.configuration;
  */
 public interface Configuration {
 
-    Object getValue(String path);
+    <T> T getValue(String path);
 
     String getString(String path);
 
