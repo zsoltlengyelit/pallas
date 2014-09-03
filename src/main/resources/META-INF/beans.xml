@@ -4,4 +4,7 @@
  <interceptors>
   <class>io.pallas.core.configuration.ConfigurationInterceptor</class>
  </interceptors>
+ <alternatives>
+  <class>io.pallas.core.execution.ExecutionContext</class>
+ </alternatives>
 </beans>

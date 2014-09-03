@@ -4,7 +4,6 @@ package io.pallas.core.configuration;
  * Configuration that specifies the comonents of application.
  *
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
- *
  */
 public interface Configuration {
 

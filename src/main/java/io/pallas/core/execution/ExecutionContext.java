@@ -3,14 +3,14 @@ package io.pallas.core.execution;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerFactory;
 import io.pallas.core.controller.action.param.ActionParamsProvider;
-import io.pallas.core.url.ActionRequest;
-import io.pallas.core.url.UrlManager;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import javax.enterprise.context.RequestScoped;
+import javax.enterprise.inject.Alternative;
+import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -19,42 +19,36 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.log4j.Logger;
 
 @RequestScoped
+@Alternative
 public class ExecutionContext {
 
     @Inject
-    private Logger logger;
+    private Logger               logger;
 
     @Inject
-    private ControllerFactory controllerFactory;
-
-    @Inject
-    private UrlManager urlManager;
+    private ControllerFactory    controllerFactory;
 
     @Inject
     private ActionParamsProvider actionParamsProvider;
 
-    private Request request = null;
+    private HttpServletRequest   request = null;
+
+    private ControllerAction     controllerAction;
 
     /**
-     *
      * @param httpRequest
      * @param response
      */
     public void execute(final HttpServletRequest httpRequest, final HttpServletResponse response) {
 
         try {
-            this.request = new Request(httpRequest);
+            request = httpRequest;
+            controllerAction = controllerFactory.createController(httpRequest.getPathInfo());
 
-            final String pathInfo = httpRequest.getPathInfo();
-
-            final ActionRequest parseRequest = urlManager.parseRequest(httpRequest);
-
-            final ControllerAction controller = controllerFactory.createController(pathInfo);
-
-            if (null == controller) {
+            if (null == controllerAction) {
 
                 try {
-                    response.getWriter().append("Cannot found action");
+                    response.getWriter().append("Cannot found action"); // TODO own page, redirect
                 } catch (final IOException e) {
                     logger.error(e);
                 }
@@ -62,7 +56,7 @@ public class ExecutionContext {
             } else {
 
                 try {
-                    final Object result = invokeController(controller, httpRequest);
+                    final Object result = invokeController(controllerAction, httpRequest);
                     handleResult(response, result);
                 } catch (final ServerException serverException) {
                     handleServerError(serverException, response);
@@ -71,13 +65,20 @@ public class ExecutionContext {
 
         } finally {
             request = null;
+            controllerAction = null;
         }
 
     }
 
     @Produces
-    public Request produceRequest() {
+    @Default
+    public HttpServletRequest produceRequest() {
         return request;
+    }
+
+    @Produces
+    public ControllerAction produceControllerAction() {
+        return controllerAction;
     }
 
     private void handleServerError(final ServerException serverException, final HttpServletResponse response) {
@@ -99,8 +100,12 @@ public class ExecutionContext {
 
         if (null == result) {
             return;
-        }
-        if (result instanceof String) {
+
+        } else if (Response.class.isAssignableFrom(result.getClass())) {
+
+            ((Response) result).render(response);
+
+        } else if (result instanceof String) {
             try {
                 response.getWriter().append((String) result);
             } catch (final IOException e) {
