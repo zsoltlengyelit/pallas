@@ -80,6 +80,15 @@ public class PallasCdiExtension implements Extension {
         checkControllerNames();
 
         LOGGER.info("Start " + Pallas.NAME + " application: " + webApplicationClass.getCanonicalName());
+
+        // TODO development mode
+        if (controllers.isEmpty()) {
+            LOGGER.warn("No controller class found.");
+        } else {
+            for (final Class<?> controller : controllers) {
+                LOGGER.info(String.format("Controller class: %s", controller.getCanonicalName()));
+            }
+        }
     }
 
     private void checkApplication() {
