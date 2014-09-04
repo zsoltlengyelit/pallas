@@ -23,7 +23,7 @@ public class QueryParamProducer implements ActionParamProducer {
 
         QueryParam queryParam = null;
         for (final Annotation annotation : annotations) {
-            if (QueryParam.class.isAssignableFrom(annotation.getClass())) {
+            if (QueryParam.class.isAssignableFrom(annotation.annotationType())) {
                 queryParam = (QueryParam) annotation;
                 break;
             }
@@ -64,7 +64,7 @@ public class QueryParamProducer implements ActionParamProducer {
     @Override
     public boolean canHandle(final Class<?> type, final Annotation[] annotations) {
         for (final Annotation annotation : annotations) {
-            if (QueryParam.class.isAssignableFrom(annotation.getClass())) {
+            if (QueryParam.class.isAssignableFrom(annotation.annotationType())) {
                 return true;
             }
         }

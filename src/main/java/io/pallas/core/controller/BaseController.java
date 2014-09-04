@@ -16,7 +16,7 @@ public class BaseController {
     private HttpServletRequest request;
 
     @Inject
-    private ViewFactory        viewFactory;
+    private ViewFactory viewFactory;
 
     protected View view() {
         return viewFactory.create(null);
@@ -32,10 +32,6 @@ public class BaseController {
 
     protected View view(final Model model) {
         return viewFactory.create(null, model);
-    }
-
-    protected Model model() {
-        return new Model();
     }
 
     protected HttpServletRequest request() {

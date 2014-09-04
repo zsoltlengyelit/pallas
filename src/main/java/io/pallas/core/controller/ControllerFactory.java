@@ -4,6 +4,7 @@ import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.DefaultAction;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
+import io.pallas.core.execution.InternalServerErrorException;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -15,20 +16,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.reflections.ReflectionUtils;
 
 import com.google.common.base.Predicate;
+import com.landasource.wiidget.util.Pair;
 
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
 public class ControllerFactory {
 
-    private static final String    DEFAULT_ACTION_NAME = "index";
+    private static final String DEFAULT_ACTION_NAME = "index";
 
     @Inject
-    private PallasCdiExtension     cdiExtension;
+    private PallasCdiExtension cdiExtension;
 
     /** Dynamic CDI injector. */
     @Inject
-    private LookupService          lookupService;
+    private LookupService lookupService;
 
     @Inject
     private ControllerNameResolver controllerNameResolver;
@@ -65,15 +67,18 @@ public class ControllerFactory {
 
     private ControllerAction getDefaultControllerAction() {
 
-        final Object controller = getDefaultController();
+        final Pair<Class<?>, Object> classAndController = getDefaultController();
+        final Object controller = classAndController.getRight();
         if (null == controller) {
             return getErrorHandlerController();
         }
-        final Method defaultActionName = getDefaultAction(controller.getClass());
+        final Class<?> controllerClass = classAndController.getLeft();
+        final Method defaultActionName = getDefaultAction(controllerClass);
 
-        return new ControllerAction(controller, defaultActionName, controller.getClass());
+        return new ControllerAction(controller, defaultActionName, controllerClass);
     }
 
+    //TODO
     private ControllerAction getErrorHandlerController() {
         return null;
     }
@@ -139,7 +144,7 @@ public class ControllerFactory {
             break;
 
         default:
-            throw new io.pallas.core.execution.ServerException("Unimplemented function");
+            throw new InternalServerErrorException("Unimplemented function");
         }
 
         return null;
@@ -166,7 +171,7 @@ public class ControllerFactory {
         return ReflectionUtils.withModifier(java.lang.reflect.Modifier.PUBLIC);
     }
 
-    private Object getDefaultController() {
+    private Pair<Class<?>, Object> getDefaultController() {
 
         final Set<Class<?>> controllerClasses = cdiExtension.getControllers();
         for (final Class<?> controllerClass : controllerClasses) {
@@ -176,7 +181,9 @@ public class ControllerFactory {
 
             if ("".equals(name) || "/".equals(name)) {
 
-                return getControllerInstance(controllerClass);
+                final Object instance = getControllerInstance(controllerClass);
+
+                return new Pair<Class<?>, Object>(controllerClass, instance);
             }
         }
 

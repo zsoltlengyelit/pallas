@@ -14,6 +14,8 @@ import javax.script.ScriptException;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
+import com.google.common.base.Optional;
+
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
@@ -23,7 +25,7 @@ public class JsConfiguration implements Configuration {
     private static final String CONFIGURATION_FILE = "configuration.js";
 
     @Inject
-    private Logger              logger;
+    private Logger logger;
 
     /**
      * The parse content of configuration.
@@ -100,6 +102,7 @@ public class JsConfiguration implements Configuration {
         return null == value ? null : Boolean.valueOf(value.toString());
     }
 
+    @Override
     public int getInt(final String path) {
         final Object value = getValue(path);
 
@@ -108,5 +111,26 @@ public class JsConfiguration implements Configuration {
         }
 
         return null == value ? null : Integer.valueOf(value.toString());
+    }
+
+    @Override
+    public <T> T getValue(final String path, final T defaultValue) {
+        return Optional.fromNullable((T) getValue(path)).or(defaultValue);
+    }
+
+    @Override
+    public String getString(final String path, final String defaultValue) {
+        return Optional.fromNullable(getString(path)).or(defaultValue);
+    }
+
+    @Override
+    public boolean getBoolean(final String path, final boolean defaultValue) {
+
+        return Optional.fromNullable(getBoolean(path)).or(defaultValue);
+    }
+
+    @Override
+    public int getInt(final String path, final int defaultValue) {
+        return Optional.fromNullable(getInt(path)).or(defaultValue);
     }
 }

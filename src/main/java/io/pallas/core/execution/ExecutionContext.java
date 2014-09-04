@@ -23,17 +23,17 @@ import org.apache.log4j.Logger;
 public class ExecutionContext {
 
     @Inject
-    private Logger               logger;
+    private Logger logger;
 
     @Inject
-    private ControllerFactory    controllerFactory;
+    private ControllerFactory controllerFactory;
 
     @Inject
     private ActionParamsProvider actionParamsProvider;
 
-    private HttpServletRequest   request = null;
+    private HttpServletRequest request = null;
 
-    private ControllerAction     controllerAction;
+    private ControllerAction controllerAction;
 
     /**
      * @param httpRequest
@@ -58,7 +58,7 @@ public class ExecutionContext {
                 try {
                     final Object result = invokeController(controllerAction, httpRequest);
                     handleResult(response, result);
-                } catch (final ServerException serverException) {
+                } catch (final HttpException serverException) {
                     handleServerError(serverException, response);
                 }
             }
@@ -81,13 +81,15 @@ public class ExecutionContext {
         return controllerAction;
     }
 
-    private void handleServerError(final ServerException serverException, final HttpServletResponse response) {
+    private void handleServerError(final HttpException serverException, final HttpServletResponse response) {
 
         try {
 
+            response.sendError(serverException.getHttpCode(), serverException.getHttpMessage());
             response.getWriter().append(serverException.getLocalizedMessage());
             response.getWriter().println();
             serverException.printStackTrace(response.getWriter());
+            response.flushBuffer();
 
             serverException.printStackTrace(); // TODO
         } catch (final IOException e) {
@@ -109,10 +111,10 @@ public class ExecutionContext {
             try {
                 response.getWriter().append((String) result);
             } catch (final IOException e) {
-                throw new ServerException("Cannot write response", e);
+                throw new InternalServerErrorException("Cannot write response", e);
             }
         } else {
-            throw new ServerException("Cannot handle result type: " + result, null);
+            throw new InternalServerErrorException("Cannot handle result type: " + result);
         }
 
     }
@@ -132,7 +134,7 @@ public class ExecutionContext {
             return result;
 
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
-            throw new ServerException("Error while call controller action", exception);
+            throw new InternalServerErrorException("Error while call controller action", exception);
         }
 
     }

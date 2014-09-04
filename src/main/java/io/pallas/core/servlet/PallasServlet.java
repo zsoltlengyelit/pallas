@@ -18,37 +18,36 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(loadOnStartup = 1, urlPatterns = "/*")
 public class PallasServlet implements Servlet {
 
-	@Inject
-	private Provider<ExecutionContext> executionContextProvider;
+    @Inject
+    private Provider<ExecutionContext> executionContextProvider;
 
-	@Override
-	public void init(ServletConfig config) throws ServletException {
-	}
+    @Override
+    public void init(final ServletConfig config) throws ServletException {
+    }
 
-	@Override
-	public ServletConfig getServletConfig() {
-		return null;
-	}
+    @Override
+    public ServletConfig getServletConfig() {
+        return null;
+    }
 
-	@SuppressWarnings("unused")
-	@Override
-	public void service(ServletRequest req, ServletResponse res) throws ServletException, IOException {
+    @Override
+    public void service(final ServletRequest req, final ServletResponse res) throws ServletException, IOException {
 
-		HttpServletRequest httpServletRequest = (HttpServletRequest) req;
-		HttpServletResponse httpServletResponse = (HttpServletResponse) res;
+        final HttpServletRequest httpServletRequest = (HttpServletRequest) req;
+        final HttpServletResponse httpServletResponse = (HttpServletResponse) res;
 
-		ExecutionContext executionContext = executionContextProvider.get();
-		executionContext.execute(httpServletRequest, httpServletResponse);
-	}
+        final ExecutionContext executionContext = executionContextProvider.get();
+        executionContext.execute(httpServletRequest, httpServletResponse);
+    }
 
-	@Override
-	public String getServletInfo() {
-		return null;
-	}
+    @Override
+    public String getServletInfo() {
+        return null;
+    }
 
-	@Override
-	public void destroy() {
+    @Override
+    public void destroy() {
 
-	}
+    }
 
 }

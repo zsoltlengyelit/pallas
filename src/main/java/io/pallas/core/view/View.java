@@ -9,10 +9,10 @@ public abstract class View implements Response {
 
     private final String path;
 
-    private final Model  model;
+    private Model model;
 
     public View(final String path) {
-        this(path, null);
+        this(path, new Model());
     }
 
     /**
@@ -36,7 +36,22 @@ public abstract class View implements Response {
      * @return the model
      */
     public Model getModel() {
+        if (null == model) {
+            model = new Model();
+        }
         return model;
+    }
+
+    /**
+     * Sets value to model
+     *
+     * @param name
+     * @param value
+     * @return this view
+     */
+    public View set(final String name, final Object value) {
+        getModel().set(name, value);
+        return this;
     }
 
 }
