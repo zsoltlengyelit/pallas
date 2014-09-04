@@ -4,8 +4,8 @@ import io.pallas.core.configuration.ConfProperty;
 import io.pallas.core.configuration.ConfigurationProducer;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerNameResolver;
-import io.pallas.core.view.wiidget.CdiWiidgetFactory;
-import io.pallas.core.view.wiidget.WiidgetView;
+import io.pallas.core.view.wiidget.integration.CdiWiidgetFactory;
+import io.pallas.core.view.wiidget.integration.WiidgetView;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;

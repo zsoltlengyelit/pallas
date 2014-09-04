@@ -1,4 +1,4 @@
-package io.pallas.core.view.wiidget;
+package io.pallas.core.view.wiidget.integration;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
