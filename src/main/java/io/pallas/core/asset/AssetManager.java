@@ -1,148 +1,146 @@
 package io.pallas.core.asset;
 
-import io.pallas.core.configuration.ConfProperty;
-import io.pallas.core.configuration.Configuration;
+import io.pallas.core.annotations.Component;
+import io.pallas.core.annotations.Configured;
 import io.pallas.core.execution.InternalServerErrorException;
 import io.pallas.core.util.Hashids;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.zip.CRC32;
 
-import javax.enterprise.context.RequestScoped;
-import javax.enterprise.inject.Produces;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
 
 /**
  * Responsible to put files to configured path.
  *
  * @author lzsolt
- *
  */
-@RequestScoped
+@ApplicationScoped
+@Component(AssetManager.COMPONENT_NAME)
 public class AssetManager {
 
-    public static final String DEFAULT_ASSETS_FOLDER = "/assets";
-    public static final String ASSETS_FOLDER_CONF_PROPERTY = "assets.folder";
+    public static final String COMPONENT_NAME = "assetManager";
 
-    @Inject
-    private Logger logger;
+    public static final String DEFAULT_URL_PATH = "/assets";
+
+    private final Map<String, String> assetContents = new HashMap<>(); // this contents must be served as content
+    private final Map<String, String> assetFiles = new HashMap<>();
+    private final Map<String, String> mimeTypes = new HashMap<>(); // assetKey -> mime type(content type)
 
     @Inject
     private ServletContext servletContext;
 
     @Inject
-    private Configuration configuration;
+    @Configured(defaultValue = DEFAULT_URL_PATH)
+    private String urlPath;
 
     /**
      * Published file where path is defined relative to deployment path
      *
      * @param relativePath
+     * @param contentType
      * @return
      */
-    public String publishRelativeContextFile(final String relativePath) {
+    public String publishRelativeContextFile(final String relativePath, final String contentType) {
         final String realPath = servletContext.getRealPath(relativePath);
         if (null == realPath) {
             throw new InternalServerErrorException(String.format("File does not exists: %s", relativePath));
         }
-        return publishRelative(new File(realPath));
-    }
-
-    public String getAssetPath(final String assetRelativepath) {
-        return produceAssetsFolder() + "/" + assetRelativepath;
+        return publishRelative(new File(realPath), contentType);
     }
 
     /**
-     *
-     * @param internalFile
-     *            file to publish
-     * @return the published file relative path in URL (of context)
-     */
-    public String publishRelative(final File internalFile) {
-
-        final File assetFolder = new File(produceAssetsFolder());
-
-        try {
-            // create asset folder
-            FileUtils.forceMkdir(assetFolder);
-
-            // create folder of asset
-            final File publishFolder = createAssetParentFolder(internalFile, assetFolder);
-
-            final File publishedFile = new File(publishFolder, internalFile.getName());
-
-            boolean mustPublish = !publishedFile.isFile();
-
-            if (!mustPublish) {
-                mustPublish = publishedFile.lastModified() != internalFile.lastModified();
-                logger.info("Republish file: " + internalFile.getAbsolutePath());
-            }
-
-            if (mustPublish) { // copy only when does not exists
-
-                logger.debug(String.format("Publish file: %s", publishedFile.getAbsolutePath()));
-
-                FileUtils.copyFileToDirectory(internalFile, publishFolder, true); // real publish
-            }
-
-            final String contextPath = servletContext.getContextPath();
-
-            return contextPath + getAssetFolderName() + "/" + publishFolder.getName() + "/" + internalFile.getName();
-
-        } catch (final IOException exception) {
-            logger.error(String.format("Cannot publish file: %s", internalFile.getAbsolutePath()));
-            throw new InternalServerErrorException(exception);
-        }
-    }
-
-    /**
-     *
+     * @param inlineContent
      * @return
      */
-    @Produces
-    @ConfProperty(ASSETS_FOLDER_CONF_PROPERTY)
-    public String produceAssetsFolder() {
-        final String assetFolderPath = getAssetFolderName();
-        //        final String deploymentFolder = servletContext.getRealPath(assetFolderPath);
+    public String publishRelativeContent(final InlineAssetContent inlineContent) {
 
-        //final File assetFolder = new File(deploymentFolder);
-        //return assetFolder.getAbsolutePath();
+        final String parentHash = hashParent(inlineContent.getParent());
 
-        final File tmpDir = (File) servletContext.getAttribute(ServletContext.TEMPDIR);
+        final String assetName = parentHash + "/" + inlineContent.getName();
+        assetContents.put(assetName, inlineContent.getContent());
+        mimeTypes.put(assetName, inlineContent.getContentType());
 
-        final File assetsFolder = new File(tmpDir + assetFolderPath);
-        return assetsFolder.getAbsolutePath();
-
+        return generateRelativePath(assetName);
     }
 
-    private String getAssetFolderName() {
-        final String assetFolderPath = configuration.getString(ASSETS_FOLDER_CONF_PROPERTY, DEFAULT_ASSETS_FOLDER);
-        return assetFolderPath;
+    /**
+     * @param internalFile
+     *            file to publish
+     * @param contentType
+     * @return the published file relative path in URL (of context)
+     */
+    public String publishRelative(final File internalFile, final String contentType) {
+
+        final String parentHash = hashParent(internalFile.getParent());
+        final String name = internalFile.getName();
+
+        final String assetName = parentHash + "/" + name;
+        assetFiles.put(assetName, internalFile.getAbsolutePath());
+        mimeTypes.put(assetName, contentType);
+
+        return generateRelativePath(assetName);
     }
 
-    protected File createAssetParentFolder(final File internalFile, final File assetFolder) throws IOException {
-        final String internalParentName = internalFile.getParentFile().getAbsolutePath();
-        final String assetParent = hashParent(internalParentName);
-        final File publishFolder = new File(assetFolder.getAbsolutePath(), assetParent);
-        FileUtils.forceMkdir(publishFolder);
+    private String generateRelativePath(final String assetName) {
+        return servletContext.getContextPath() + urlPath + "/" + assetName;
+    }
 
-        return publishFolder;
+    /**
+     * @param assetUrl
+     * @return the file when set, otherwise null
+     */
+    public Asset getAsset(final String assetKey) {
+        InputStream stream = null;
+
+        final String absolutePath = assetFiles.get(assetKey);
+
+        if (null == absolutePath) {
+            final String content = assetContents.get(assetKey);
+            if (null == content) {
+                return null;
+            } else {
+                stream = new ByteArrayInputStream(content.getBytes());
+            }
+        } else {
+
+            // handle file
+            try {
+                stream = new FileInputStream(absolutePath);
+            } catch (FileNotFoundException | NullPointerException e) {
+                return null;
+            }
+        }
+
+        return new Asset(stream, mimeTypes.get(assetKey));
     }
 
     protected String hashParent(final String internalParentName) {
 
+        final CRC32 crc32 = new CRC32();
+        final byte[] bytes = internalParentName.getBytes();
+        crc32.update(bytes, 0, bytes.length);
+
         try {
-            final String encrypt = new Hashids().encrypt(internalParentName);
-            if (encrypt.length() > 200) {
-                return encrypt.substring(0, 200);
-            }
-            return encrypt;
+            return new Hashids().encrypt(crc32.getValue());
         } catch (final Exception e) {
             throw new InternalServerErrorException(e);
         }
+    }
+
+    /**
+     * @return the urlPath
+     */
+    public String getUrlPath() {
+        return urlPath;
     }
 
 }

@@ -1,9 +1,11 @@
 package io.pallas.core.view.wiidget.integration;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
+import javax.servlet.ServletContext;
 
 import com.landasource.wiidget.context.DefaultWiidgetContext;
 
@@ -14,6 +16,16 @@ public class CdiWiidgetContext extends DefaultWiidgetContext {
 
     @Inject
     private BeanManager beanManager;
+
+    @Inject
+    private ServletContext servletContext;
+
+    @PostConstruct
+    private void init() {
+
+        set("contextPath", servletContext.getContextPath());
+
+    }
 
     @Override
     public Object get(final String variable) {

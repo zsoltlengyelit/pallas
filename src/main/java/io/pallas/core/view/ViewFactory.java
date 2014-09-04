@@ -1,7 +1,7 @@
 package io.pallas.core.view;
 
-import io.pallas.core.configuration.ConfProperty;
-import io.pallas.core.configuration.ConfigurationProducer;
+import io.pallas.core.annotations.Component;
+import io.pallas.core.annotations.Configured;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerNameResolver;
 import io.pallas.core.view.wiidget.integration.CdiWiidgetFactory;
@@ -15,24 +15,30 @@ import com.google.common.base.Strings;
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
+@Component(ViewFactory.COMPONENT_NAME)
 public class ViewFactory {
 
-    @Inject
-    private CdiWiidgetFactory      cdiWiidgetFactory;
+    public static final String COMPONENT_NAME = "viewFactory";
+
+    public static final String DEFAULT_VIEW_FILE_SUFFIX = ".wdgt";
+    public static final String DEFAULT_VIEW_PATH = "/WEB-INF/view";
 
     @Inject
-    private HttpServletRequest     request;
+    private CdiWiidgetFactory cdiWiidgetFactory;
 
     @Inject
-    @ConfProperty(ConfigurationProducer.VIEW_PATH_CONF_PROPERTY)
-    private String                 viewBasePath;
+    private HttpServletRequest request;
 
     @Inject
-    @ConfProperty(ConfigurationProducer.VIEW_FILE_SUFFIX_CONF_PROPERTY)
-    private String                 viewFileSuffix;
+    @Configured(defaultValue = DEFAULT_VIEW_PATH)
+    private String viewBasePath;
 
     @Inject
-    private ControllerAction       controllerAction;
+    @Configured(defaultValue = DEFAULT_VIEW_FILE_SUFFIX)
+    private String viewFileSuffix;
+
+    @Inject
+    private ControllerAction controllerAction;
 
     @Inject
     private ControllerNameResolver controllerNameResolver;
@@ -82,4 +88,19 @@ public class ViewFactory {
         final String controllerName = controllerNameResolver.getControllerName(controllerAction.getControllerClass());
         return controllerName;
     }
+
+    /**
+     * @return the viewBasePath
+     */
+    public String getViewBasePath() {
+        return viewBasePath;
+    }
+
+    /**
+     * @return the viewFileSuffix
+     */
+    public String getViewFileSuffix() {
+        return viewFileSuffix;
+    }
+
 }

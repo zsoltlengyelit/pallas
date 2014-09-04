@@ -13,6 +13,7 @@ import javax.enterprise.inject.Alternative;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -43,6 +44,7 @@ public class ExecutionContext {
 
         try {
             request = httpRequest;
+
             controllerAction = controllerFactory.createController(httpRequest.getPathInfo());
 
             if (null == controllerAction) {
@@ -62,12 +64,23 @@ public class ExecutionContext {
                     handleServerError(serverException, response);
                 }
             }
+            //} catch (final RoutingException exception) {
+
+            //            tryServeWithDispatcher(httpRequest, response);
 
         } finally {
             request = null;
             controllerAction = null;
         }
 
+    }
+
+    private void tryServeWithDispatcher(final HttpServletRequest httpRequest, final HttpServletResponse response) {
+        try {
+            request.getRequestDispatcher(httpRequest.getPathInfo()).forward(httpRequest, response);
+        } catch (ServletException | IOException e) {
+            throw new InternalServerErrorException(e);
+        }
     }
 
     @Produces
@@ -77,6 +90,7 @@ public class ExecutionContext {
     }
 
     @Produces
+    @Default
     public ControllerAction produceControllerAction() {
         return controllerAction;
     }

@@ -1,5 +1,8 @@
 package io.pallas.core.view.wiidget.integration;
 
+import io.pallas.core.configuration.ConfProperty;
+import io.pallas.core.view.ViewFactory;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,7 +20,11 @@ import com.landasource.wiidget.io.FileLoader;
 public class ServletFileLoader implements FileLoader {
 
     private final ServletContext context;
-    private final ClassPathFileLoader classPathFileLoader = new ClassPathFileLoader();;
+    private final ClassPathFileLoader classPathFileLoader = new ClassPathFileLoader();
+
+    @Inject
+    @ConfProperty(name = "application.components." + ViewFactory.COMPONENT_NAME + ".viewBasePath", defaultValue = ViewFactory.DEFAULT_VIEW_PATH)
+    private String viewBasePath;
 
     @Inject
     public ServletFileLoader(final ServletContext context) {
@@ -41,7 +48,7 @@ public class ServletFileLoader implements FileLoader {
     }
 
     private String getContextPath(final String filename) {
-        return context.getRealPath("/WEB-INF/view/" + filename);
+        return context.getRealPath(viewBasePath + "/" + filename);
     }
 
     @Override

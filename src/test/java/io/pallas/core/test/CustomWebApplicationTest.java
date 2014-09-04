@@ -17,22 +17,21 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class CustomWebApplicationTest {
 
-	@Inject
-	private PallasCdiExtension cdiExtension;
+    @Inject
+    private PallasCdiExtension cdiExtension;
 
-	@Inject
-	private Pallas pallas;
+    @Inject
+    private Pallas             pallas;
 
-	@Deployment
-	public static JavaArchive deploy() {
-		return ArchiveUtil.buildDefault(Pallas.class, CustomApplication.class);
-	}
+    @Deployment
+    public static JavaArchive deploy() {
+        return ArchiveUtil.buildDefault(Pallas.class, CustomApplication.class);
+    }
 
-	@Test
-	public void testFoundApplication() {
-		Assert.assertTrue(cdiExtension.getWebApplicationClass() == CustomApplication.class);
-		Assert.assertNotNull(pallas.getApplication());
-		Assert.assertTrue(pallas.getApplication().getClass() == CustomApplication.class);
-	}
-
+    @Test
+    public void testFoundApplication() {
+        Assert.assertEquals(CustomApplication.class, cdiExtension.getWebApplicationClass());
+        Assert.assertNotNull(pallas.getApplication());
+        Assert.assertEquals(CustomApplication.class, pallas.getApplication().getClass());
+    }
 }

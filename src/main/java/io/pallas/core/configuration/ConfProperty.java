@@ -10,6 +10,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import javax.enterprise.util.Nonbinding;
 import javax.inject.Qualifier;
 
 /**
@@ -21,6 +22,9 @@ import javax.inject.Qualifier;
 @Documented
 public @interface ConfProperty {
 
-    String value();
+    @Nonbinding
+    String name();
 
+    @Nonbinding
+    String defaultValue() default "";
 }

@@ -5,24 +5,31 @@ import io.pallas.core.WebApplication;
 import io.pallas.core.annotations.Application;
 import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.Module;
+import io.pallas.core.annotations.Startup;
 import io.pallas.core.controller.action.param.ActionParamProducer;
 
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.AfterDeploymentValidation;
+import javax.enterprise.inject.spi.Annotated;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.ProcessBean;
 import javax.enterprise.inject.spi.WithAnnotations;
 import javax.inject.Singleton;
 
 /**
- *
  * @author Zsolti
- *
  */
 @Singleton
 public class PallasCdiExtension implements Extension {
@@ -33,6 +40,7 @@ public class PallasCdiExtension implements Extension {
     private final Set<Class<?>> controllers = new HashSet<Class<?>>();
     private Class<? extends WebApplication> webApplicationClass;
     private final Set<Class<? extends ActionParamProducer>> actionParamProducers = new HashSet<Class<? extends ActionParamProducer>>();
+    private final List<StartupBean> startupBeans = new ArrayList<>();
 
     public <T> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
         final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
@@ -74,20 +82,44 @@ public class PallasCdiExtension implements Extension {
         webApplicationClass = javaClass;
     }
 
-    void afterBeanDiscovery(@Observes final AfterBeanDiscovery abd) {
+    public <T> void procesStartupBeans(@Observes final ProcessBean<T> event) {
+        final Annotated annotated = event.getAnnotated();
+        if (annotated.isAnnotationPresent(Startup.class) && annotated.isAnnotationPresent(ApplicationScoped.class)) {
+            final Bean<T> bean = event.getBean();
+            startupBeans.add(new StartupBean(bean, annotated.getAnnotation(Startup.class).priority()));
+        }
+    }
 
-        checkApplication();
-        checkControllerNames();
+    public void afterBeanDiscovery(@Observes final AfterBeanDiscovery abv) {
 
-        LOGGER.info("Start " + Pallas.NAME + " application: " + webApplicationClass.getCanonicalName());
+        try {
+            checkApplication();
+            checkControllerNames();
 
-        // TODO development mode
-        if (controllers.isEmpty()) {
-            LOGGER.warn("No controller class found.");
-        } else {
-            for (final Class<?> controller : controllers) {
-                LOGGER.info(String.format("Controller class: %s", controller.getCanonicalName()));
+            LOGGER.info("Start " + Pallas.NAME + " application: " + webApplicationClass.getCanonicalName());
+
+            // TODO development mode
+            if (controllers.isEmpty()) {
+                LOGGER.warn("No controller class found.");
+            } else {
+                for (final Class<?> controller : controllers) {
+                    LOGGER.info(String.format("Controller class: %s", controller.getCanonicalName()));
+                }
             }
+
+        } catch (final Throwable throwable) { // any exception invalidates deploy
+            abv.addDefinitionError(throwable);
+        }
+    }
+
+    public void afterDeploymentValidation(@Observes final AfterDeploymentValidation event, final BeanManager beanManager) {
+
+        Collections.sort(startupBeans);
+
+        for (final StartupBean startupBean : startupBeans) {
+            final Bean<?> bean = startupBean.getBean();
+            // note: toString() is important to instantiate the bean
+            beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean)).toString();
         }
     }
 

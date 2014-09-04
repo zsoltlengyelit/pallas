@@ -4,7 +4,6 @@ import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.DefaultAction;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
-import io.pallas.core.execution.InternalServerErrorException;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
@@ -144,7 +143,7 @@ public class ControllerFactory {
             break;
 
         default:
-            throw new InternalServerErrorException("Unimplemented function");
+            throw new RoutingException("Unimplemented function");
         }
 
         return null;

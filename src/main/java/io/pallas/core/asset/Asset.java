@@ -1,66 +1,37 @@
 package io.pallas.core.asset;
 
-import io.pallas.core.execution.InternalServerErrorException;
-import io.pallas.core.execution.Response;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-
-import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
 
 /**
- *
- * @author lzsolt
- *
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
-public class Asset implements Response {
+public class Asset {
 
-    private final File file;
-    private final String mimeType;
+    private final InputStream stream;
+    private final String contentType;
 
     /**
-     *
-     * @param file
-     *            file to write in response
+     * @param stream
+     * @param contentType
      */
-    public Asset(final File file, final String mimeType) {
+    public Asset(final InputStream stream, final String contentType) {
         super();
-        this.file = file;
-        this.mimeType = mimeType;
+        this.stream = stream;
+        this.contentType = contentType;
     }
 
-    @Override
-    public void render(final HttpServletResponse response) {
+    /**
+     * @return the stream
+     */
+    public InputStream getStream() {
+        return stream;
+    }
 
-        //response.addHeader("Content-Disposition", "attachment; filename="+"sampleZip.zip");
-        //response.setHeader("Set-Cookie", "fileDownload=true; path=/");
-
-        response.setContentType(mimeType);
-        response.setContentLength((int) file.length());
-        FileInputStream fileInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(file);
-            final OutputStream responseOutputStream = response.getOutputStream();
-            int bytes;
-            while ((bytes = fileInputStream.read()) != -1) {
-                responseOutputStream.write(bytes);
-            }
-            response.flushBuffer();
-
-        } catch (final IOException exception) {
-            throw new InternalServerErrorException(exception);
-        } finally {
-            // close file
-            if (null != fileInputStream) {
-                try {
-                    fileInputStream.close();
-                } catch (final IOException exception) {
-                    throw new InternalServerErrorException(exception);
-                }
-            }
-        }
+    /**
+     * @return the contentType
+     */
+    public String getContentType() {
+        return contentType;
     }
 
 }

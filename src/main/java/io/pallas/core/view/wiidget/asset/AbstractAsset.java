@@ -1,18 +1,15 @@
-package io.pallas.core.view.wiidget;
+package io.pallas.core.view.wiidget.asset;
 
 import io.pallas.core.asset.AssetManager;
 
 import javax.inject.Inject;
 
-import com.landasource.wiidget.Tag;
 import com.landasource.wiidget.Wiidget;
 
 /**
- *
  * @author lzsolt
- *
  */
-public class AbstractAsset extends Wiidget {
+public abstract class AbstractAsset extends Wiidget {
 
     private String src;
 
@@ -25,13 +22,21 @@ public class AbstractAsset extends Wiidget {
     public void run() {
         super.run();
 
-        final String assetPath = assetManager.publishRelativeContextFile(src);
+        final String assetPath = assetManager.publishRelativeContextFile(src, getContentType());
 
-        // TODO script
-        final String tag = new Tag("script").a("src", assetPath).a("type", type).toString();
-
-        write(tag);
+        writeTag(assetPath);
     }
+
+    /**
+     * By default the type tells the asset content type.
+     *
+     * @return content type with publish the asset
+     */
+    protected String getContentType() {
+        return getType();
+    }
+
+    protected abstract void writeTag(String assetPath);
 
     public String getSrc() {
         return src;
