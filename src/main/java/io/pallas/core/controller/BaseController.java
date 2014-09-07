@@ -4,6 +4,8 @@ import io.pallas.core.view.Model;
 import io.pallas.core.view.View;
 import io.pallas.core.view.ViewFactory;
 
+import java.io.InputStream;
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
@@ -19,11 +21,15 @@ public class BaseController {
     private ViewFactory viewFactory;
 
     protected View view() {
-        return viewFactory.create(null);
+        return viewFactory.createFromPath(null);
     }
 
     protected View view(final String path) {
-        return viewFactory.create(path);
+        return viewFactory.createFromPath(path);
+    }
+
+    protected View view(final InputStream inputStream) {
+        return viewFactory.create(inputStream);
     }
 
     protected View view(final String path, final Model model) {

@@ -1,0 +1,80 @@
+"<!DOCTYPE html>";
+"html"{
+	"head"{
+		
+		"title"("Error: " + exception.message);
+		"style"{
+		"
+		
+			html, body{
+				padding: 0;
+				margin: 0;
+				font-family: monospace;
+			}
+		
+			.error-message{
+				color: white;
+				font-size: 2em;				
+				padding: 15px;
+				background: #d36242;
+				background: -moz-linear-gradient(top, #d36242 0%, darkred 100%);
+				background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, #d36242), color-stop(100%, darkred));
+				background: -webkit-linear-gradient(top, #d36242 0%, darkred 100%);
+				background: -o-linear-gradient(top, #d36242 0%, darkred 100%);
+				background: -ms-linear-gradient(top, #d36242 0%, darkred 100%);
+				background: linear-gradient(to bottom, #d36242 0%, darkred 100%);
+				filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='$firstColor', endColorstr='$secondColor',GradientType=0 );
+				
+			}
+			
+			.stack{
+				background: rgb(215, 236, 255);
+			}
+			
+			.stack .item{
+				background: #FFBFBF;
+				padding: 5px;
+				margin: 0;
+			}
+			
+			.stack .item:nth-child(odd){
+				background: #FFA3A3;
+			}
+			
+			.file-location{
+				color: blue;				
+			}
+			
+			.class-location{
+				font-weight: bold;
+			}
+			.method-location{
+				color: rgb(0, 95, 88);
+				font-weight: bold;
+				text-decoration: underline;
+			}
+		
+		";
+		}
+	
+	}
+	
+	"body"{
+		
+		"div"(class="error-message"){`exception.getMessage()`;}
+		
+		"div"(class="stack"){
+			foreach(stack : exception.stackTrace){
+			
+				"p"(class="item"){	
+					"span"(class="file-location"){`stack.fileName + ":" + stack.lineNumber`;}
+					"span"(class="class-location"){`" " + stack.className`;}
+					"#";
+					"span"(class="method-location"){`stack.methodName`;}		
+				}
+			
+			}
+		}
+	}
+
+}

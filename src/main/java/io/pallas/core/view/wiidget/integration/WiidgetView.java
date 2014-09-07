@@ -3,7 +3,6 @@ package io.pallas.core.view.wiidget.integration;
 import io.pallas.core.view.Model;
 import io.pallas.core.view.View;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -19,13 +18,15 @@ import com.landasource.wiidget.engine.WiidgetFactory;
 public class WiidgetView extends View {
 
     private final WiidgetFactory wiidgetFactory;
+    private final InputStream inputStream;
 
     /**
      * @param path
      * @param model
      */
-    public WiidgetView(final String path, final Model model, final WiidgetFactory wiidgetFactory) {
-        super(path, model);
+    public WiidgetView(final InputStream inputStream, final Model model, final WiidgetFactory wiidgetFactory) {
+        super(null, model);
+        this.inputStream = inputStream;
         this.wiidgetFactory = wiidgetFactory;
 
     }
@@ -33,17 +34,17 @@ public class WiidgetView extends View {
     /**
      * @param path
      */
-    public WiidgetView(final String path, final WiidgetFactory wiidgetFactory) {
-        super(path);
+    public WiidgetView(final InputStream inputStream, final WiidgetFactory wiidgetFactory) {
+        super(null);
+        this.inputStream = inputStream;
         this.wiidgetFactory = wiidgetFactory;
     }
 
     @Override
     public void render(final HttpServletResponse response) {
         try {
-            final InputStream inputStream = new FileInputStream(getPath());
 
-            Model model = getModel();
+            final Model model = getModel();
             if (null != model) {
                 wiidgetFactory.getWiidgetContext().setAll(model);
             }
@@ -57,4 +58,5 @@ public class WiidgetView extends View {
             throw new RuntimeException(e);
         }
     }
+
 }

@@ -4,8 +4,13 @@ import io.pallas.core.annotations.Component;
 import io.pallas.core.annotations.Configured;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerNameResolver;
+import io.pallas.core.execution.InternalServerErrorException;
 import io.pallas.core.view.wiidget.integration.CdiWiidgetFactory;
+import io.pallas.core.view.wiidget.integration.WiidgeFileView;
 import io.pallas.core.view.wiidget.integration.WiidgetView;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +29,7 @@ public class ViewFactory {
     public static final String DEFAULT_VIEW_PATH = "/WEB-INF/view";
 
     @Inject
-    private CdiWiidgetFactory cdiWiidgetFactory;
+    private CdiWiidgetFactory wiidgetFactory;
 
     @Inject
     private HttpServletRequest request;
@@ -43,13 +48,22 @@ public class ViewFactory {
     @Inject
     private ControllerNameResolver controllerNameResolver;
 
-    public View create(final String view) {
+    public View createFromPath(final String view) {
         return create(view, null);
+    }
+
+    public View create(final InputStream inputStream) {
+        return new WiidgetView(inputStream, wiidgetFactory);
     }
 
     public View create(final String view, final Model model) {
         final String realPath = getViewPath(view);
-        return new WiidgetView(realPath, model, cdiWiidgetFactory);
+
+        try {
+            return new WiidgeFileView(realPath, model, wiidgetFactory);
+        } catch (final FileNotFoundException exception) {
+            throw new InternalServerErrorException(exception);
+        }
     }
 
     /**

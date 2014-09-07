@@ -1,8 +1,11 @@
 package io.pallas.core.execution;
 
+import io.pallas.core.cdi.LookupService;
+import io.pallas.core.controller.ActionNotFoundException;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerFactory;
 import io.pallas.core.controller.action.param.ActionParamsProvider;
+import io.pallas.core.execution.errorhandling.HttpErrorHandler;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -13,7 +16,6 @@ import javax.enterprise.inject.Alternative;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -25,6 +27,9 @@ public class ExecutionContext {
 
     @Inject
     private Logger logger;
+
+    @Inject
+    private LookupService lookupService;
 
     @Inject
     private ControllerFactory controllerFactory;
@@ -47,40 +52,33 @@ public class ExecutionContext {
 
             controllerAction = controllerFactory.createController(httpRequest.getPathInfo());
 
+            Object result;
+
             if (null == controllerAction) {
 
-                try {
-                    response.getWriter().append("Cannot found action"); // TODO own page, redirect
-                } catch (final IOException e) {
-                    logger.error(e);
-                }
+                result = handleHttpError(new ActionNotFoundException(httpRequest.getPathInfo()), response);
 
             } else {
 
                 try {
-                    final Object result = invokeController(controllerAction, httpRequest);
-                    handleResult(response, result);
-                } catch (final HttpException serverException) {
-                    handleServerError(serverException, response);
-                }
-            }
-            //} catch (final RoutingException exception) {
 
-            //            tryServeWithDispatcher(httpRequest, response);
+                    result = invokeController(controllerAction, httpRequest);
+
+                } catch (final HttpException httpException) {
+                    result = handleHttpError(httpException, response);
+                } catch (final Throwable exception) {
+                    result = handleHttpError(new InternalServerErrorException(exception), response);
+                }
+
+            }
+
+            handleResult(response, result);
 
         } finally {
             request = null;
             controllerAction = null;
         }
 
-    }
-
-    private void tryServeWithDispatcher(final HttpServletRequest httpRequest, final HttpServletResponse response) {
-        try {
-            request.getRequestDispatcher(httpRequest.getPathInfo()).forward(httpRequest, response);
-        } catch (ServletException | IOException e) {
-            throw new InternalServerErrorException(e);
-        }
     }
 
     @Produces
@@ -95,21 +93,10 @@ public class ExecutionContext {
         return controllerAction;
     }
 
-    private void handleServerError(final HttpException serverException, final HttpServletResponse response) {
+    private Object handleHttpError(final HttpException serverException, final HttpServletResponse response) {
 
-        try {
-
-            response.sendError(serverException.getHttpCode(), serverException.getHttpMessage());
-            response.getWriter().append(serverException.getLocalizedMessage());
-            response.getWriter().println();
-            serverException.printStackTrace(response.getWriter());
-            response.flushBuffer();
-
-            serverException.printStackTrace(); // TODO
-        } catch (final IOException e) {
-            logger.error(e);
-            e.printStackTrace(); // TODO
-        }
+        final HttpErrorHandler errorHandler = lookupService.lookup(HttpErrorHandler.class);
+        return errorHandler.handle(serverException, response);
     }
 
     private void handleResult(final HttpServletResponse response, final Object result) {
@@ -128,7 +115,7 @@ public class ExecutionContext {
                 throw new InternalServerErrorException("Cannot write response", e);
             }
         } else {
-            throw new InternalServerErrorException("Cannot handle result type: " + result);
+            throw new InternalServerErrorException("Cannot handle result type: " + result.getClass());
         }
 
     }
@@ -136,8 +123,6 @@ public class ExecutionContext {
     private Object invokeController(final ControllerAction controller, final HttpServletRequest request) {
 
         try {
-            // TODO params
-
             final Method action = controller.getAction();
 
             final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
