@@ -14,6 +14,8 @@ import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
 
+import com.google.common.base.Strings;
+
 /**
  * Static class of application framework.
  *
@@ -50,7 +52,11 @@ public class Pallas {
 
         final String mode = System.getProperty("pallas.mode", RunMode.PRODUCTION.name());
 
-        return RunMode.valueOf(mode.toUpperCase());
+        if (Strings.isNullOrEmpty(mode)) {
+            return RunMode.PRODUCTION;
+        } else {
+            return RunMode.valueOf(mode.toUpperCase());
+        }
     }
 
     @PostConstruct

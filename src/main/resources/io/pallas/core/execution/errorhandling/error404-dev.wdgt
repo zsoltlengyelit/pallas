@@ -62,12 +62,35 @@
 	
 	"body"{
 		
-		"div"(class="error-message"){`exception.getMessage()`;}	
+		"div"(class="error-message"){`exception.getMessage()`;}
 		
-		"div"{
-			"h1"("Sorry");
+		"div"(class="stack"){
+			foreach(stack : exception.stackTrace){
+			
+				"p"(class="item"){	
+					"span"(class="file-location"){`stack.fileName + ":" + stack.lineNumber`;}
+					"span"(class="class-location"){`" " + stack.className`;}
+					"#";
+					"span"(class="method-location"){`stack.methodName`;}		
+				}
+			
+			}
 		}
 		
+		if(null != exception.cause){
+			"div"(class="stack"){
+				foreach(stack : exception.getCause().stackTrace){
+				
+					"p"(class="item"){	
+						"span"(class="file-location"){`stack.fileName + ":" + stack.lineNumber`;}
+						"span"(class="class-location"){`" " + stack.className`;}
+						"#";
+						"span"(class="method-location"){`stack.methodName`;}		
+					}
+				
+				}
+			}
+		}
 	}
 
 }
