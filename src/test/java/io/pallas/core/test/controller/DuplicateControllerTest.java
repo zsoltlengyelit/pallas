@@ -1,8 +1,6 @@
 package io.pallas.core.test.controller;
 
 import io.pallas.core.cdi.DeploymentException;
-import io.pallas.core.test.sample.CustomApplication;
-import io.pallas.core.test.sample.DuplicateApplication;
 import io.pallas.core.test.testutil.ArchiveUtil;
 
 import org.jboss.arquillian.container.test.api.Deployment;
@@ -17,15 +15,15 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class DuplicateControllerTest {
 
-	@Deployment(testable = false)
-	@ShouldThrowException(DeploymentException.class)
-	public static JavaArchive deploy() {
-		return ArchiveUtil.build(CustomApplication.class, DuplicateApplication.class);
-	}
+    @Deployment(testable = false)
+    @ShouldThrowException(DeploymentException.class)
+    public static JavaArchive deploy() {
+        return ArchiveUtil.build();
+    }
 
-	@Test
-	public void testNothing() {
+    @Test
+    public void testNothing() {
 
-	}
+    }
 
 }

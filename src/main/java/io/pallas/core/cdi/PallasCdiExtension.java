@@ -1,8 +1,5 @@
 package io.pallas.core.cdi;
 
-import io.pallas.core.Pallas;
-import io.pallas.core.WebApplication;
-import io.pallas.core.annotations.Application;
 import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.Module;
 import io.pallas.core.annotations.Startup;
@@ -38,7 +35,7 @@ public class PallasCdiExtension implements Extension {
 
     private final Set<Class<?>> modules = new HashSet<Class<?>>();
     private final Set<Class<?>> controllers = new HashSet<Class<?>>();
-    private Class<? extends WebApplication> webApplicationClass;
+
     private final Set<Class<? extends ActionParamProducer>> actionParamProducers = new HashSet<Class<? extends ActionParamProducer>>();
     private final List<StartupBean> startupBeans = new ArrayList<>();
 
@@ -67,21 +64,6 @@ public class PallasCdiExtension implements Extension {
         actionParamProducers.add(javaClass);
     }
 
-    public <T extends WebApplication> void processApplication(@Observes @WithAnnotations(Application.class) final ProcessAnnotatedType<T> pat) {
-
-        final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
-        if (!javaClass.isAnnotationPresent(Application.class)) {
-            return; // double check
-        }
-
-        if (null != webApplicationClass) {
-            throw new DeploymentException(WebApplication.class.getSimpleName() + " is defined more then once: " + webApplicationClass.getCanonicalName() + ", "
-                    + javaClass.getCanonicalName());
-        }
-
-        webApplicationClass = javaClass;
-    }
-
     public <T> void procesStartupBeans(@Observes final ProcessBean<T> event) {
         final Annotated annotated = event.getAnnotated();
         if (annotated.isAnnotationPresent(Startup.class) && annotated.isAnnotationPresent(ApplicationScoped.class)) {
@@ -93,12 +75,8 @@ public class PallasCdiExtension implements Extension {
     public void afterBeanDiscovery(@Observes final AfterBeanDiscovery abv) {
 
         try {
-            checkApplication();
             checkControllerNames();
 
-            LOGGER.info("Start " + Pallas.NAME + " application: " + webApplicationClass.getCanonicalName());
-
-            // TODO development mode
             if (controllers.isEmpty()) {
                 LOGGER.warn("No controller class found.");
             } else {
@@ -120,13 +98,6 @@ public class PallasCdiExtension implements Extension {
             final Bean<?> bean = startupBean.getBean();
             // note: toString() is important to instantiate the bean
             beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean)).toString();
-        }
-    }
-
-    private void checkApplication() {
-
-        if (null == webApplicationClass) {
-            webApplicationClass = WebApplication.class; // default application class
         }
     }
 
@@ -153,10 +124,6 @@ public class PallasCdiExtension implements Extension {
 
     public Set<Class<?>> getControllers() {
         return Collections.unmodifiableSet(controllers);
-    }
-
-    public Class<? extends WebApplication> getWebApplicationClass() {
-        return webApplicationClass;
     }
 
     public Set<Class<? extends ActionParamProducer>> getActionParamProducers() {

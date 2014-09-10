@@ -1,15 +1,12 @@
 package io.pallas.core;
 
 import io.pallas.core.annotations.Startup;
-import io.pallas.core.cdi.LookupService;
-import io.pallas.core.cdi.PallasCdiExtension;
 import io.pallas.core.events.ApplicationStart;
 import io.pallas.core.init.RunMode;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Event;
-import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -32,21 +29,10 @@ public class Pallas {
     public static final String VERSION = "0.1.0";
 
     @Inject
-    private LookupService lookupService;
-
-    @Inject
-    private PallasCdiExtension cdiExtension;
-
-    @Inject
     private Event<ApplicationStart> applicationStartEvent;
 
     @Inject
     private Logger logger;
-
-    @Produces
-    public WebApplication getApplication() {
-        return lookupService.lookup(cdiExtension.getWebApplicationClass());
-    }
 
     public static RunMode getRunMode() {
 

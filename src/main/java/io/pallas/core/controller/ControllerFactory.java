@@ -4,12 +4,14 @@ import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.DefaultAction;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
+import io.pallas.core.execution.PageNotFoundException;
 
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.reflections.ReflectionUtils;
@@ -35,12 +37,14 @@ public class ControllerFactory {
     private ControllerNameResolver controllerNameResolver;
 
     /**
-     * @param path
+     * @param httpRequest
      *            URL path
      * @return controller and action descriptor
      */
-    public ControllerAction createController(final String path) {
-        String realPath = path == null ? "" : path;
+    public ControllerAction createController(final HttpServletRequest httpRequest) {
+
+        final String pathInfo = httpRequest.getPathInfo();
+        String realPath = pathInfo == null ? "" : pathInfo;
 
         if (realPath.startsWith("/")) {
             realPath = realPath.substring(1);
@@ -61,7 +65,8 @@ public class ControllerFactory {
             }
         }
 
-        return getErrorHandlerController();
+        throw new PageNotFoundException();
+
     }
 
     private ControllerAction getDefaultControllerAction() {
@@ -69,17 +74,12 @@ public class ControllerFactory {
         final Pair<Class<?>, Object> classAndController = getDefaultController();
         final Object controller = classAndController.getRight();
         if (null == controller) {
-            return getErrorHandlerController();
+            throw new PageNotFoundException();
         }
         final Class<?> controllerClass = classAndController.getLeft();
         final Method defaultActionName = getDefaultAction(controllerClass);
 
         return new ControllerAction(controller, defaultActionName, controllerClass);
-    }
-
-    //TODO
-    private ControllerAction getErrorHandlerController() {
-        return null;
     }
 
     @SuppressWarnings("unchecked")

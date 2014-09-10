@@ -50,7 +50,7 @@ public class ExecutionContext {
         try {
             request = httpRequest;
 
-            controllerAction = controllerFactory.createController(httpRequest.getPathInfo());
+            controllerAction = controllerFactory.createController(httpRequest);
 
             Object result;
 

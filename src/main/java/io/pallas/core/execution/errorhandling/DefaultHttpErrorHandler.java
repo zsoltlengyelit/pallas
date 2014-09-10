@@ -22,10 +22,16 @@ public class DefaultHttpErrorHandler extends BaseController implements HttpError
     private Logger logger;
 
     @Override
-    public View handle(final HttpException exception, final HttpServletResponse response) {
+    public View handle(final HttpException error, final HttpServletResponse response) {
 
-        logger.error(exception.getLocalizedMessage(), exception);
+        logger.error(error.getLocalizedMessage(), error);
 
+        response.setStatus(error.getHttpCode());
+
+        return getErrorView(error);
+    }
+
+    protected View getErrorView(final HttpException error) {
         InputStream stream;
         if (Pallas.getRunMode().equals(RunMode.DEVELOPMENT)) {
             stream = getClass().getResourceAsStream("error404-dev.wdgt");
@@ -33,6 +39,6 @@ public class DefaultHttpErrorHandler extends BaseController implements HttpError
             stream = getClass().getResourceAsStream("error404.wdgt");
         }
 
-        return view(stream).set("exception", exception);
+        return view(stream).set("exception", error);
     }
 }

@@ -7,14 +7,11 @@ import io.pallas.core.cdi.PallasCdiExtension;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.action.param.ActionParamProducer;
 import io.pallas.core.execution.ExecutionContext;
-import io.pallas.core.test.sample.CustomApplication;
-import io.pallas.core.test.sample.DuplicateApplication;
 import io.pallas.core.util.LoggerProducer;
 import io.pallas.core.view.ViewFactory;
 
 import javax.enterprise.inject.spi.Extension;
 
-import org.jboss.shrinkwrap.api.Filters;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.asset.EmptyAsset;
 import org.jboss.shrinkwrap.api.asset.StringAsset;
@@ -44,9 +41,8 @@ public class ArchiveUtil {
      * @return web archive
      */
     public static JavaArchive buildDefault(final Class<?>... classes) {
-        return build().addPackages(true, Filters.exclude(DuplicateApplication.class, CustomApplication.class), Pallas.class.getPackage())
-                .addClasses(ActionParamProducer.class, ExecutionContext.class, ControllerAction.class, ViewFactory.class).addClasses(classes)
-                .addAsManifestResource(new StringAsset(PallasCdiExtension.class.getCanonicalName()), "services/javax.enterprise.inject.spi.Extension")
+        return build().addPackages(true, Pallas.class.getPackage()).addClasses(ActionParamProducer.class, ExecutionContext.class, ControllerAction.class, ViewFactory.class)
+                .addClasses(classes).addAsManifestResource(new StringAsset(PallasCdiExtension.class.getCanonicalName()), "services/javax.enterprise.inject.spi.Extension")
                 .addClasses(PallasCdiExtension.class, DeploymentException.class).addAsServiceProvider(Extension.class, PallasCdiExtension.class);
     }
 

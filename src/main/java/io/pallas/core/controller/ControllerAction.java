@@ -9,9 +9,9 @@ import java.lang.reflect.Method;
  */
 public class ControllerAction {
 
-    private final Object   controller;
+    private final Object controller;
 
-    private final Method   action;
+    private final Method action;
 
     private final Class<?> controllerClass;
 
@@ -42,4 +42,9 @@ public class ControllerAction {
         return controllerClass;
     }
 
+    @Override
+    public String toString() {
+
+        return "[" + controllerClass.getCanonicalName() + "#" + action.getName() + "]";
+    }
 }

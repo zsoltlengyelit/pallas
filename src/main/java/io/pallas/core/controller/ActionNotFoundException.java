@@ -22,7 +22,6 @@ public class ActionNotFoundException extends HttpException {
 
     @Override
     public int getHttpCode() {
-
         return 404;
     }
 
