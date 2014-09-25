@@ -16,6 +16,15 @@ import com.landasource.wiidget.parser.resource.ClassWiidgetResource;
 import com.landasource.wiidget.util.Strings;
 
 /**
+ * Useges:
+ * <ul>
+ * <li>Link("simple/url")</li>
+ * <li>Link(ControllerClass)</li>
+ * <li>Link([ControllerClass])</li>
+ * <li>Link([ControllerClass, "actionName"])</li>
+ * <li>Link([ControllerClass, "actionName", {param : "value"}])</li>
+ * </ul>
+ *
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
 public class Link extends HtmlTagWiidget {
@@ -33,14 +42,23 @@ public class Link extends HtmlTagWiidget {
      */
     private String label;
 
+    private final LinkBuilder builder;
+
+    /**
+     * @param builder
+     */
     @Inject
-    private LinkBuilder builder;
+    public Link(final LinkBuilder builder) {
+        super();
+        this.builder = builder;
+    }
 
     @Override
     public void init() {
         startBuffer();
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void run() {
         final String buffer = endBuffer();
@@ -66,14 +84,13 @@ public class Link extends HtmlTagWiidget {
             }
 
         } else if (to instanceof ClassWiidgetResource) {
-            final ClassWiidgetResource resource = (ClassWiidgetResource) to;
 
             final Class<?> wiidgetClass = ((ClassWiidgetResource) to).getWiidgetClass();
 
             href = builder.of(wiidgetClass);
 
         } else {
-            href = (String) to;
+            href = builder.of((String) to);
         }
 
         getByPassAttributes().put("href", href);

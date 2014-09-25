@@ -37,13 +37,11 @@ public class LinkBuilder {
     }
 
     public String of(final String cbase) {
-        final String base = request.getContextPath() + cbase;
-        final String encodeRedirectURL = response.encodeRedirectURL(base);
-        final String encodeRedirectUrl2 = response.encodeRedirectUrl(base);
-        final String encodeUrl = response.encodeUrl(base);
-        final String encodeURL2 = response.encodeURL(base);
 
-        return base;
+        final String contextPath = request.getContextPath();
+        final String encodeRedirectURL = response.encodeURL(cbase);
+
+        return contextPath + encodeRedirectURL;
     }
 
     public String of(final Class<?> controller) {
@@ -52,12 +50,11 @@ public class LinkBuilder {
 
         final StringBuilder urlBuilder = new StringBuilder();
 
-        urlBuilder.append(request.getContextPath());
         urlBuilder.append("/");
 
         urlBuilder.append(controllerName);
 
-        return urlBuilder.toString();
+        return of(urlBuilder.toString());
     }
 
     /**
@@ -74,7 +71,6 @@ public class LinkBuilder {
 
         final StringBuilder urlBuilder = new StringBuilder();
 
-        urlBuilder.append(request.getContextPath());
         urlBuilder.append("/");
 
         urlBuilder.append(controllerName);
@@ -91,7 +87,7 @@ public class LinkBuilder {
             urlBuilder.append(urlFormat);
         }
 
-        return urlBuilder.toString();
+        return of(urlBuilder.toString());
     }
 
     private List<NameValuePair> convert(final Map<String, Object> params) {
@@ -111,12 +107,11 @@ public class LinkBuilder {
 
         final StringBuilder urlBuilder = new StringBuilder();
 
-        urlBuilder.append(request.getContextPath());
         urlBuilder.append("/");
 
         urlBuilder.append(controllerName);
 
-        return urlBuilder.toString();
+        return of(urlBuilder.toString());
     }
 
     public String of(final ClassWiidgetResource classWiidgetResource, final String string) {
