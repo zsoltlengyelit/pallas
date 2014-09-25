@@ -15,12 +15,12 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.landasource.wiidget.context.DefaultWiidgetContext;
+import com.landasource.wiidget.context.DefaultContext;
 
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
-public class CdiWiidgetContext extends DefaultWiidgetContext {
+public class CdiWiidgetContext extends DefaultContext {
 
     @Inject
     private BeanManager beanManager;

@@ -10,34 +10,34 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
 import com.landasource.wiidget.Renderer;
-import com.landasource.wiidget.engine.WiidgetFactory;
+import com.landasource.wiidget.engine.Engine;
 
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
 public class WiidgetView extends View {
 
-    private final WiidgetFactory wiidgetFactory;
+    private final Engine engine;
     private final InputStream inputStream;
 
     /**
      * @param path
      * @param model
      */
-    public WiidgetView(final InputStream inputStream, final Model model, final WiidgetFactory wiidgetFactory) {
+    public WiidgetView(final InputStream inputStream, final Model model, final Engine engine) {
         super(null, model);
         this.inputStream = inputStream;
-        this.wiidgetFactory = wiidgetFactory;
+        this.engine = engine;
 
     }
 
     /**
      * @param path
      */
-    public WiidgetView(final InputStream inputStream, final WiidgetFactory wiidgetFactory) {
+    public WiidgetView(final InputStream inputStream, final Engine engine) {
         super(null);
         this.inputStream = inputStream;
-        this.wiidgetFactory = wiidgetFactory;
+        this.engine = engine;
     }
 
     @Override
@@ -46,10 +46,10 @@ public class WiidgetView extends View {
 
             final Model model = getModel();
             if (null != model) {
-                wiidgetFactory.getWiidgetContext().setAll(model);
+                engine.getWiidgetContext().setAll(model);
             }
 
-            final String result = Renderer.create(wiidgetFactory).render(inputStream);
+            final String result = Renderer.create(engine).render(inputStream);
 
             response.setHeader("Content-Type", MediaType.TEXT_HTML);
             response.getWriter().append(result);
