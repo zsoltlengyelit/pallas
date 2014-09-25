@@ -39,24 +39,27 @@ public class ExecutionContext {
 
     private HttpServletRequest request = null;
 
+    private HttpServletResponse response = null;
+
     private ControllerAction controllerAction;
 
     /**
      * @param httpRequest
-     * @param response
+     * @param httpResponse
      */
-    public void execute(final HttpServletRequest httpRequest, final HttpServletResponse response) {
+    public void execute(final HttpServletRequest httpRequest, final HttpServletResponse httpResponse) {
 
         try {
+            // produced beans
             request = httpRequest;
-
+            response = httpResponse;
             controllerAction = controllerFactory.createController(httpRequest);
 
             Object result;
 
             if (null == controllerAction) {
 
-                result = handleHttpError(new ActionNotFoundException(httpRequest.getPathInfo()), response);
+                result = handleHttpError(new ActionNotFoundException(httpRequest.getPathInfo()), httpResponse);
 
             } else {
 
@@ -65,17 +68,18 @@ public class ExecutionContext {
                     result = invokeController(controllerAction, httpRequest);
 
                 } catch (final HttpException httpException) {
-                    result = handleHttpError(httpException, response);
+                    result = handleHttpError(httpException, httpResponse);
                 } catch (final Throwable exception) {
-                    result = handleHttpError(new InternalServerErrorException(exception), response);
+                    result = handleHttpError(new InternalServerErrorException(exception), httpResponse);
                 }
 
             }
 
-            handleResult(response, result);
+            handleResult(httpResponse, result);
 
         } finally {
             request = null;
+            response = null;
             controllerAction = null;
         }
 
@@ -85,6 +89,12 @@ public class ExecutionContext {
     @Default
     public HttpServletRequest produceRequest() {
         return request;
+    }
+
+    @Produces
+    @Default
+    public HttpServletResponse produceResponse() {
+        return response;
     }
 
     @Produces

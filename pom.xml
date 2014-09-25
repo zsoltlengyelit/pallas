@@ -3,12 +3,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>io.pallas</groupId>
 	<artifactId>pallas</artifactId>
-	<version>0.1.0</version>
+	<version>0.1.1</version>
 	<packaging>jar</packaging>
 
 	<properties>
 		<rewrite.version>2.0.12.Final</rewrite.version>
-		<wiidget.version>0.1.2</wiidget.version>
+		<wiidget.version>0.1.4</wiidget.version>
 	</properties>
 
 	<dependencies>
@@ -76,10 +76,17 @@
 		</dependency>
 
 		<dependency>
-		<groupId>org.ocpsoft.rewrite</groupId>
-		<artifactId>rewrite-integration-cdi</artifactId>
-		<version>${rewrite.version}</version>
+			<groupId>org.ocpsoft.rewrite</groupId>
+			<artifactId>rewrite-integration-cdi</artifactId>
+			<version>${rewrite.version}</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.2.1</version>
+		</dependency>
+
 
 		<!-- Testing -->
 

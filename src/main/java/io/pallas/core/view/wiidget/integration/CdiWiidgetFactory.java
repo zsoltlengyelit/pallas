@@ -14,5 +14,7 @@ public class CdiWiidgetFactory extends DefaultWiidgetFactory {
     @Inject
     public CdiWiidgetFactory(final CdiWiidgetContext context, final CdiConfiguration configuration) {
         super(new DefaultWiidgetProperties(), context, new ResultTransformerRegistrator(), configuration);
+
     }
+
 }
