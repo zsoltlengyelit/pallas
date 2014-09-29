@@ -48,15 +48,15 @@ public class ViewFactory {
     @Inject
     private ControllerNameResolver controllerNameResolver;
 
-    public View createFromPath(final String view) {
+    public AbstractView createFromPath(final String view) {
         return create(view, null);
     }
 
-    public View create(final InputStream inputStream) {
+    public AbstractView create(final InputStream inputStream) {
         return new WiidgetView(inputStream, wiidgetFactory);
     }
 
-    public View create(final String view, final Model model) {
+    public AbstractView create(final String view, final Model model) {
         final String realPath = getViewPath(view);
 
         try {

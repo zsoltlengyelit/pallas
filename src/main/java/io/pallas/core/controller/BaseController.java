@@ -1,7 +1,7 @@
 package io.pallas.core.controller;
 
 import io.pallas.core.view.Model;
-import io.pallas.core.view.View;
+import io.pallas.core.view.AbstractView;
 import io.pallas.core.view.ViewFactory;
 
 import java.io.InputStream;
@@ -20,23 +20,23 @@ public class BaseController {
     @Inject
     private ViewFactory viewFactory;
 
-    protected View view() {
+    protected AbstractView view() {
         return viewFactory.createFromPath(null);
     }
 
-    protected View view(final String path) {
+    protected AbstractView view(final String path) {
         return viewFactory.createFromPath(path);
     }
 
-    protected View view(final InputStream inputStream) {
+    protected AbstractView view(final InputStream inputStream) {
         return viewFactory.create(inputStream);
     }
 
-    protected View view(final String path, final Model model) {
+    protected AbstractView view(final String path, final Model model) {
         return viewFactory.create(path, model);
     }
 
-    protected View view(final Model model) {
+    protected AbstractView view(final Model model) {
         return viewFactory.create(null, model);
     }
 

@@ -4,6 +4,7 @@ import io.pallas.core.cdi.LookupService;
 import io.pallas.core.controller.ActionNotFoundException;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerFactory;
+import io.pallas.core.controller.RoutingException;
 import io.pallas.core.controller.action.param.ActionParamsProvider;
 import io.pallas.core.execution.errorhandling.HttpErrorHandler;
 
@@ -25,127 +26,132 @@ import org.apache.log4j.Logger;
 @Alternative
 public class ExecutionContext {
 
-    @Inject
-    private Logger logger;
+	@Inject
+	private Logger logger;
 
-    @Inject
-    private LookupService lookupService;
+	@Inject
+	private LookupService lookupService;
 
-    @Inject
-    private ControllerFactory controllerFactory;
+	@Inject
+	private ControllerFactory controllerFactory;
 
-    @Inject
-    private ActionParamsProvider actionParamsProvider;
+	@Inject
+	private ActionParamsProvider actionParamsProvider;
 
-    private HttpServletRequest request = null;
+	private HttpServletRequest request = null;
 
-    private HttpServletResponse response = null;
+	private HttpServletResponse response = null;
 
-    private ControllerAction controllerAction;
+	private ControllerAction controllerAction;
 
-    /**
-     * @param httpRequest
-     * @param httpResponse
-     */
-    public void execute(final HttpServletRequest httpRequest, final HttpServletResponse httpResponse) {
+	/**
+	 * @param httpRequest
+	 * @param httpResponse
+	 */
+	public void execute(final HttpServletRequest httpRequest, final HttpServletResponse httpResponse) {
 
-        try {
-            // produced beans
-            request = httpRequest;
-            response = httpResponse;
-            controllerAction = controllerFactory.createController(httpRequest);
+		try {
+			// produced beans
+			request = httpRequest;
+			response = httpResponse;
+			Object result;
+			try {
+				controllerAction = controllerFactory.createController(httpRequest);
 
-            Object result;
+				if (null == controllerAction) {
 
-            if (null == controllerAction) {
+					result = handleHttpError(new ActionNotFoundException(httpRequest.getPathInfo()), httpResponse);
 
-                result = handleHttpError(new ActionNotFoundException(httpRequest.getPathInfo()), httpResponse);
+				} else {
 
-            } else {
+					try {
 
-                try {
+						result = invokeController(controllerAction, httpRequest);
 
-                    result = invokeController(controllerAction, httpRequest);
+					} catch (final HttpException httpException) {
+						result = handleHttpError(httpException, httpResponse);
 
-                } catch (final HttpException httpException) {
-                    result = handleHttpError(httpException, httpResponse);
-                } catch (final Throwable exception) {
-                    result = handleHttpError(new InternalServerErrorException(exception), httpResponse);
-                }
+					} catch (final Throwable exception) {
+						result = handleHttpError(new InternalServerErrorException(exception), httpResponse);
+					}
 
-            }
+				}
 
-            handleResult(httpResponse, result);
+			} catch (final PageNotFoundException | RoutingException exception) {
+				result = handleHttpError(exception, httpResponse);
+			}
 
-        } finally {
-            request = null;
-            response = null;
-            controllerAction = null;
-        }
+			handleResult(httpResponse, result);
 
-    }
+		} finally {
+			request = null;
+			response = null;
+			controllerAction = null;
+		}
 
-    @Produces
-    @Default
-    public HttpServletRequest produceRequest() {
-        return request;
-    }
+	}
 
-    @Produces
-    @Default
-    public HttpServletResponse produceResponse() {
-        return response;
-    }
+	@Produces
+	@Default
+	public HttpServletRequest produceRequest() {
+		return request;
+	}
 
-    @Produces
-    @Default
-    public ControllerAction produceControllerAction() {
-        return controllerAction;
-    }
+	@Produces
+	@Default
+	public HttpServletResponse produceResponse() {
+		return response;
+	}
 
-    private Object handleHttpError(final HttpException serverException, final HttpServletResponse response) {
+	@Produces
+	@Default
+	public ControllerAction produceControllerAction() {
+		return controllerAction;
+	}
 
-        final HttpErrorHandler errorHandler = lookupService.lookup(HttpErrorHandler.class);
-        return errorHandler.handle(serverException, response);
-    }
+	private Object handleHttpError(final HttpException serverException, final HttpServletResponse response) {
 
-    private void handleResult(final HttpServletResponse response, final Object result) {
+		final HttpErrorHandler errorHandler = lookupService.lookup(HttpErrorHandler.class);
+		return errorHandler.handle(serverException, response);
+	}
 
-        if (null == result) {
-            return;
+	private void handleResult(final HttpServletResponse response, final Object result) {
 
-        } else if (Response.class.isAssignableFrom(result.getClass())) {
+		if (null == result) {
+			return;
 
-            ((Response) result).render(response);
+		} else if (Response.class.isAssignableFrom(result.getClass())) {
 
-        } else if (result instanceof String) {
-            try {
-                response.getWriter().append((String) result);
-            } catch (final IOException e) {
-                throw new InternalServerErrorException("Cannot write response", e);
-            }
-        } else {
-            throw new InternalServerErrorException("Cannot handle result type: " + result.getClass());
-        }
+			((Response) result).render(response);
 
-    }
+		} else if (result instanceof String) {
+			try {
+				response.getWriter().append((String) result);
+			} catch (final IOException e) {
+				throw new InternalServerErrorException("Cannot write response", e);
+			}
+		} else {
+			throw new InternalServerErrorException("Cannot handle result type: " + result.getClass());
+		}
 
-    private Object invokeController(final ControllerAction controller, final HttpServletRequest request) {
+	}
 
-        try {
-            final Method action = controller.getAction();
+	private Object invokeController(final ControllerAction controller, final HttpServletRequest request) {
 
-            final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
+		try {
+			final Method action = controller.getAction();
 
-            final Object object = controller.getController();
+			final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
 
-            final Object result = action.invoke(object, parameters);
-            return result;
+			final Object object = controller.getController();
 
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
-            throw new InternalServerErrorException("Error while call controller action", exception);
-        }
+			final Object result = action.invoke(object, parameters);
+			return result;
 
-    }
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
+			throw new InternalServerErrorException("Error while call controller action", exception);
+		}
+
+	}
 
 }
