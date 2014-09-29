@@ -7,8 +7,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.jboss.weld.exceptions.IllegalArgumentException;
-
 import com.landasource.wiidget.Tag;
 import com.landasource.wiidget.annotation.DefaultField;
 import com.landasource.wiidget.library.html.HtmlTagWiidget;

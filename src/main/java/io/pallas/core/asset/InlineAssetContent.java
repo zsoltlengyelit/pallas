@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.jboss.weld.exceptions.IllegalArgumentException;
 
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
