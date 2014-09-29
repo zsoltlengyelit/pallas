@@ -66,7 +66,7 @@ public class PallasCdiExtension implements Extension {
 
     public <T> void procesStartupBeans(@Observes final ProcessBean<T> event) {
         final Annotated annotated = event.getAnnotated();
-        if (annotated.isAnnotationPresent(Startup.class) && annotated.isAnnotationPresent(ApplicationScoped.class)) {
+        if (annotated.isAnnotationPresent(Startup.class)/* && annotated.isAnnotationPresent(ApplicationScoped.class)*/) {
             final Bean<T> bean = event.getBean();
             startupBeans.add(new StartupBean(bean, annotated.getAnnotation(Startup.class).priority()));
         }

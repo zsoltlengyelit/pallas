@@ -4,7 +4,7 @@ import io.pallas.core.Pallas;
 import io.pallas.core.controller.BaseController;
 import io.pallas.core.execution.HttpException;
 import io.pallas.core.init.RunMode;
-import io.pallas.core.view.View;
+import io.pallas.core.view.AbstractView;
 
 import java.io.InputStream;
 
@@ -22,7 +22,7 @@ public class DefaultHttpErrorHandler extends BaseController implements HttpError
     private Logger logger;
 
     @Override
-    public View handle(final HttpException error, final HttpServletResponse response) {
+    public AbstractView handle(final HttpException error, final HttpServletResponse response) {
 
         logger.error(error.getLocalizedMessage(), error);
 
@@ -31,7 +31,7 @@ public class DefaultHttpErrorHandler extends BaseController implements HttpError
         return getErrorView(error);
     }
 
-    protected View getErrorView(final HttpException error) {
+    protected AbstractView getErrorView(final HttpException error) {
         InputStream stream;
         if (Pallas.getRunMode().equals(RunMode.DEVELOPMENT)) {
             stream = getClass().getResourceAsStream("error404-dev.wdgt");

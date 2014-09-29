@@ -3,55 +3,26 @@ package io.pallas.core.view;
 import io.pallas.core.execution.Response;
 
 /**
- * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
+ *
+ * @author lzsolt
+ *
  */
-public abstract class View implements Response {
+public interface View extends Response{
 
-    private final String path;
 
-    private Model model;
+	/**
+	 * @return the model
+	 */
+	public Model getModel();
 
-    public View(final String path) {
-        this(path, new Model());
-    }
+	/**
+	 * Sets value to model
+	 *
+	 * @param name
+	 * @param value
+	 * @return this view
+	 */
+	public View set(final String name, final Object value);
 
-    /**
-     * @param path
-     * @param model
-     */
-    public View(final String path, final Model model) {
-        super();
-        this.path = path;
-        this.model = model;
-    }
-
-    /**
-     * @return the path
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * @return the model
-     */
-    public Model getModel() {
-        if (null == model) {
-            model = new Model();
-        }
-        return model;
-    }
-
-    /**
-     * Sets value to model
-     *
-     * @param name
-     * @param value
-     * @return this view
-     */
-    public View set(final String name, final Object value) {
-        getModel().set(name, value);
-        return this;
-    }
 
 }
