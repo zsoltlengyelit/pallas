@@ -4,6 +4,7 @@ import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.Module;
 import io.pallas.core.annotations.Startup;
 import io.pallas.core.controller.action.param.ActionParamProducer;
+import io.pallas.core.module.ModulePackage;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -32,18 +33,18 @@ public class PallasCdiExtension implements Extension {
 
 	private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
 
-	private final Set<Class<?>> modules = new HashSet<Class<?>>();
+	private final Set<ModulePackage> modules = new HashSet<ModulePackage>();
 	private final Set<Class<?>> controllers = new HashSet<Class<?>>();
 
 	private final Set<Class<? extends ActionParamProducer>> actionParamProducers = new HashSet<Class<? extends ActionParamProducer>>();
 	private final List<StartupBean> startupBeans = new ArrayList<>();
 
 	public <T> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
-		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
+		final Package modulePack = pat.getAnnotatedType().getJavaClass().getPackage();
 
-		if (javaClass.isAnnotationPresent(Module.class)) { // double check on
-														   // class
-			modules.add(javaClass);
+		if (modulePack.isAnnotationPresent(Module.class)) { // double check on
+			                                                // class
+			modules.add(new ModulePackage(modulePack));
 		}
 	}
 
@@ -51,10 +52,10 @@ public class PallasCdiExtension implements Extension {
 		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
 		if (javaClass.isAnnotationPresent(Controller.class)) { // double check
-															   // because CDI
-															   // 1.1 just
-															   // recommends
-															   // @WithAnnotations
+			                                                   // because CDI
+			                                                   // 1.1 just
+			                                                   // recommends
+			                                                   // @WithAnnotations
 			controllers.add(javaClass);
 		}
 	}
@@ -71,11 +72,11 @@ public class PallasCdiExtension implements Extension {
 	public <T> void procesStartupBeans(@Observes final ProcessBean<T> event) {
 		final Annotated annotated = event.getAnnotated();
 		if (annotated.isAnnotationPresent(Startup.class)/*
-														 * && annotated.
-														 * isAnnotationPresent
-														 * (ApplicationScoped
-														 * .class)
-														 */) {
+		 * && annotated.
+		 * isAnnotationPresent
+		 * (ApplicationScoped
+		 * .class)
+		 */) {
 			final Bean<T> bean = event.getBean();
 			startupBeans.add(new StartupBean(bean, annotated.getAnnotation(Startup.class).priority()));
 		}
@@ -95,7 +96,7 @@ public class PallasCdiExtension implements Extension {
 			}
 
 		} catch (final Throwable throwable) { // any exception invalidates
-											  // deploy
+			                                  // deploy
 			abv.addDefinitionError(throwable);
 		}
 	}
@@ -128,7 +129,7 @@ public class PallasCdiExtension implements Extension {
 		}
 	}
 
-	public Set<Class<?>> getModules() {
+	public Set<ModulePackage> getModules() {
 		return Collections.unmodifiableSet(modules);
 	}
 
