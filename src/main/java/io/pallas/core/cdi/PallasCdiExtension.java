@@ -4,7 +4,6 @@ import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.Module;
 import io.pallas.core.annotations.Startup;
 import io.pallas.core.controller.action.param.ActionParamProducer;
-import io.pallas.core.module.ModulePackage;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -33,19 +32,18 @@ public class PallasCdiExtension implements Extension {
 
 	private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
 
-	private final Set<ModulePackage> modules = new HashSet<ModulePackage>();
+	private final Set<Class<?>> modules = new HashSet<Class<?>>();
 	private final Set<Class<?>> controllers = new HashSet<Class<?>>();
 
 	private final Set<Class<? extends ActionParamProducer>> actionParamProducers = new HashSet<Class<? extends ActionParamProducer>>();
 	private final List<StartupBean> startupBeans = new ArrayList<>();
 
 	public <T> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
-		final Package packageClass = pat.getAnnotatedType().getJavaClass().getPackage();
+		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
-		final Module annotation = packageClass.getAnnotation(Module.class);
-		if (null != annotation) { // double check on class
-			LOGGER.info(String.format("Module found: '%s'", packageClass.getName()));
-			modules.add(new ModulePackage(packageClass));
+		if (javaClass.isAnnotationPresent(Module.class)) { // double check on
+														   // class
+			modules.add(javaClass);
 		}
 	}
 
@@ -53,10 +51,10 @@ public class PallasCdiExtension implements Extension {
 		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
 		if (javaClass.isAnnotationPresent(Controller.class)) { // double check
-			// because CDI
-			// 1.1 just
-			// recommends
-			// @WithAnnotations
+															   // because CDI
+															   // 1.1 just
+															   // recommends
+															   // @WithAnnotations
 			controllers.add(javaClass);
 		}
 	}
@@ -86,6 +84,7 @@ public class PallasCdiExtension implements Extension {
 	public void afterBeanDiscovery(@Observes final AfterBeanDiscovery abv) {
 
 		try {
+			checkControllerNames();
 
 			if (controllers.isEmpty()) {
 				LOGGER.warn("No controller class found.");
@@ -96,7 +95,7 @@ public class PallasCdiExtension implements Extension {
 			}
 
 		} catch (final Throwable throwable) { // any exception invalidates
-			// deploy
+											  // deploy
 			abv.addDefinitionError(throwable);
 		}
 	}
@@ -112,7 +111,24 @@ public class PallasCdiExtension implements Extension {
 		}
 	}
 
-	public Set<ModulePackage> getModules() {
+	private void checkControllerNames() {
+
+		final Set<String> names = new HashSet<String>();
+
+		for (final Class<?> controllerClass : controllers) {
+
+			final Controller annotation = controllerClass.getAnnotation(Controller.class);
+			final String name = annotation.value();
+
+			if (names.contains(name)) {
+				throw new DeploymentException("Duplicate controller name: " + name);
+			}
+
+			names.add(name);
+		}
+	}
+
+	public Set<Class<?>> getModules() {
 		return Collections.unmodifiableSet(modules);
 	}
 
