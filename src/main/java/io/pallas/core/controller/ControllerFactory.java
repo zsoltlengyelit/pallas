@@ -1,6 +1,5 @@
 package io.pallas.core.controller;
 
-import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.DefaultAction;
 import io.pallas.core.cdi.LookupService;
 import io.pallas.core.execution.PageNotFoundException;
@@ -69,7 +68,7 @@ public class ControllerFactory {
 	private ControllerAction createControllerAction(final Module moduleContext, final String realPath) {
 
 		// check in root
-		for (final Class<?> controllerClass : moduleContext.getControllers().values()) {
+		for (final ControllerClass controllerClass : moduleContext.getControllers().values()) {
 
 			final ControllerAction controllerAction = getMatchingController(moduleContext, controllerClass, realPath);
 
@@ -79,7 +78,7 @@ public class ControllerFactory {
 		}
 
 		// check in children
-		for (final Module childModule : moduleContext.getChildren().values()) {
+		for (final Module childModule : moduleContext.getChildren()) {
 			final ControllerAction controllerAction = createControllerAction(childModule, realPath);
 			if (null != controllerAction) {
 				return controllerAction;
@@ -96,32 +95,33 @@ public class ControllerFactory {
 	 */
 	private ControllerAction getDefaultControllerAction(final Module moduleContext) {
 
-		final Pair<Class<?>, Object> classAndController = getDefaultController(moduleContext);
+		final Pair<ControllerClass, Object> classAndController = getDefaultController(moduleContext);
 		final Object controller = classAndController.getRight();
 		if (null == controller) {
 			throw new PageNotFoundException();
 		}
-		final Class<?> controllerClass = classAndController.getLeft();
+		final ControllerClass controllerClass = classAndController.getLeft();
 		final Method defaultActionName = getDefaultAction(controllerClass);
 
 		return new ControllerAction(controller, defaultActionName, controllerClass);
 	}
 
 	@SuppressWarnings("unchecked")
-	private Method getDefaultAction(final Class<?> controllerClass) {
+	private Method getDefaultAction(final ControllerClass controllerClass) {
 
-		final Set<Method> methodsAnnotatedWith = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withAnnotation(DefaultAction.class), publicModifierPredicate());
+		final Set<Method> methodsAnnotatedWith = ReflectionUtils.getMethods(controllerClass.getType(), ReflectionUtils.withAnnotation(DefaultAction.class),
+				publicModifierPredicate());
 
 		if (methodsAnnotatedWith.isEmpty()) {
 
-			final Set<Method> methods = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withName(DEFAULT_ACTION_NAME), publicModifierPredicate());
+			final Set<Method> methods = ReflectionUtils.getMethods(controllerClass.getType(), ReflectionUtils.withName(DEFAULT_ACTION_NAME), publicModifierPredicate());
 
 			if (methods.isEmpty()) {
-				throw new RoutingException("Cannot find default action for controller:" + controllerClass.getCanonicalName());
+				throw new RoutingException("Cannot find default action for controller:" + controllerClass.getType().getCanonicalName());
 			}
 
 			if (methods.size() > 1) {
-				throwMultipleDefaultActionError(controllerClass);
+				throwMultipleDefaultActionError(controllerClass.getType());
 			}
 
 			return methods.iterator().next();
@@ -129,7 +129,7 @@ public class ControllerFactory {
 		} else {
 
 			if (methodsAnnotatedWith.size() > 1) {
-				throwMultipleDefaultActionError(controllerClass);
+				throwMultipleDefaultActionError(controllerClass.getType());
 			}
 
 			return methodsAnnotatedWith.iterator().next();
@@ -141,7 +141,7 @@ public class ControllerFactory {
 		throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has multiple default action.");
 	}
 
-	private ControllerAction getMatchingController(final Module moduleContext, final Class<?> controllerClass, final String path) {
+	private ControllerAction getMatchingController(final Module moduleContext, final ControllerClass controllerClass, final String path) {
 
 		final String[] pathParts = path.split("/");
 		if (pathParts.length == 0) {
@@ -151,7 +151,7 @@ public class ControllerFactory {
 		return decideWithPathParts(moduleContext, controllerClass, pathParts);
 	}
 
-	private ControllerAction decideWithPathParts(final Module moduleContext, final Class<?> controllerClass, final String[] pathParts) {
+	private ControllerAction decideWithPathParts(final Module moduleContext, final ControllerClass controllerClass, final String[] pathParts) {
 
 		final String controllerName = controllerNameResolver.getControllerName(controllerClass);
 
@@ -174,26 +174,26 @@ public class ControllerFactory {
 				final Method action = getNamedAction(controllerClass, pathParts[1]);
 				return new ControllerAction(controller, action, controllerClass);
 			}
-			final ControllerAction modControllerAction = findModuleController(moduleContext, controllerClass, controllerName, pathParts);
+			final ControllerAction modControllerAction = findModuleController(moduleContext, pathParts);
 			if (null != modControllerAction) {
 				return modControllerAction;
 			}
 			break;
 
 		default:
-			return findModuleController(moduleContext, controllerClass, controllerName, pathParts);
+			return findModuleController(moduleContext, pathParts);
 		}
 
 		return null;
 	}
 
-	private ControllerAction findModuleController(final Module moduleContext, final Class<?> controllerClass, final String controllerName, final String[] pathParts) {
+	private ControllerAction findModuleController(final Module moduleContext, final String[] pathParts) {
 
 		// TODO handle supmodules
 		final String alias = moduleContext.getAlias();
 		if (pathParts[0].equals(alias)) { // controller may be in this package
 
-			for (final Class<?> modControllerClass : moduleContext.getControllers().values()) {
+			for (final ControllerClass modControllerClass : moduleContext.getControllers().values()) {
 				final String[] modulePathParts = Arrays.copyOfRange(pathParts, 1, pathParts.length);
 
 				final ControllerAction withPathParts = decideWithPathParts(moduleContext, modControllerClass, modulePathParts);
@@ -207,16 +207,17 @@ public class ControllerFactory {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Method getNamedAction(final Class<?> controllerClass, final String name) {
+	private Method getNamedAction(final ControllerClass controllerClass, final String name) {
 
-		final Set<Method> methods = ReflectionUtils.getMethods(controllerClass, ReflectionUtils.withName(name), publicModifierPredicate());
+		final Class<?> type = controllerClass.getType();
+		final Set<Method> methods = ReflectionUtils.getMethods(type, ReflectionUtils.withName(name), publicModifierPredicate());
 
 		if (methods.isEmpty()) {
-			throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has no public method with name: '" + name + "'");
+			throw new RoutingException("Controller '" + type.getCanonicalName() + "' has no public method with name: '" + name + "'");
 		}
 
 		if (methods.size() > 1) {
-			throw new RoutingException("Controller '" + controllerClass.getCanonicalName() + "' has multiple method with name: '" + name + "'");
+			throw new RoutingException("Controller '" + type.getCanonicalName() + "' has multiple method with name: '" + name + "'");
 		}
 
 		return methods.iterator().next();
@@ -227,19 +228,18 @@ public class ControllerFactory {
 		return ReflectionUtils.withModifier(java.lang.reflect.Modifier.PUBLIC);
 	}
 
-	private Pair<Class<?>, Object> getDefaultController(final Module moduleContext) {
+	private Pair<ControllerClass, Object> getDefaultController(final Module moduleContext) {
 
-		final Collection<Class<?>> controllerClasses = moduleContext.getControllers().values();
-		for (final Class<?> controllerClass : controllerClasses) {
+		final Collection<ControllerClass> controllerClasses = moduleContext.getControllers().values();
+		for (final ControllerClass controllerClass : controllerClasses) {
 
-			final Controller annotation = controllerClass.getAnnotation(Controller.class);
-			final String name = annotation.value();
+			final String name = controllerClass.getName();
 
 			if ("".equals(name) || "/".equals(name)) {
 
 				final Object instance = getControllerInstance(controllerClass);
 
-				return new Pair<Class<?>, Object>(controllerClass, instance);
+				return new Pair<ControllerClass, Object>(controllerClass, instance);
 			}
 		}
 
@@ -248,10 +248,12 @@ public class ControllerFactory {
 
 	/**
 	 * @param controllerClass
+	 * @param controllerClass
+	 *            .getType()
 	 * @return
 	 */
-	private Object getControllerInstance(final Class<?> controllerClass) {
-		return lookupService.lookup(controllerClass);
+	private Object getControllerInstance(final ControllerClass controllerClass) {
+		return lookupService.lookup(controllerClass.getType());
 	}
 
 }

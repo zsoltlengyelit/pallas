@@ -2,15 +2,20 @@ package io.pallas.core.module;
 
 import io.pallas.core.WebApplication;
 import io.pallas.core.annotations.Controller;
-import io.pallas.core.annotations.Module;
 import io.pallas.core.annotations.Startup;
 import io.pallas.core.cdi.DeploymentException;
 import io.pallas.core.cdi.PallasCdiExtension;
 import io.pallas.core.configuration.Configuration;
+import io.pallas.core.controller.ControllerClass;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.annotation.PostConstruct;
@@ -68,7 +73,7 @@ public class ModuleManager {
 
 		if (null == moduleContext) { // init contexts
 
-			final Map<String, io.pallas.core.module.Module> modules = new HashMap<String, io.pallas.core.module.Module>();
+			final Set<Module> modules = new HashSet<Module>();
 
 			final Set<ModulePackage> modulePackages = cdiExtension.getModules();
 			for (final ModulePackage modulePackage : modulePackages) {
@@ -76,13 +81,15 @@ public class ModuleManager {
 				final String moduleAlias = getModuleAlias(modulePackage);
 
 				// check duplicate aliases
-				if (modules.containsKey(moduleAlias)) {
-					throw new IllegalModuleConfigException(String.format("Two modules with same alias: %s (%s, %s)", moduleAlias, modulePackage.getModulePackage().getName(),
-					        modules.get(moduleAlias)));
-				}
+				// if (modules.containsKey(moduleAlias)) {
+				// throw new
+				// IllegalModuleConfigException(String.format("Two modules with same alias: %s (%s, %s)",
+				// moduleAlias, modulePackage.getModulePackage().getName(),
+				// modules.get(moduleAlias)));
+				// }
 
-				final io.pallas.core.module.Module module = createModuleContext(modulePackage, moduleAlias);
-				modules.put(moduleAlias, module); // put to map
+				final Module module = createModuleContext(modulePackage, moduleAlias);
+				modules.add(module); // put to map
 			}
 
 			// create module for application
@@ -93,14 +100,17 @@ public class ModuleManager {
 		return moduleContext;
 	}
 
-	private ApplicationModule createApplicationContext(final Map<String, io.pallas.core.module.Module> modules) {
+	protected ApplicationModule createApplicationContext(final Set<Module> modules) {
 
-		final Map<String, Class<?>> appControllers = new HashMap<String, Class<?>>();
-		final Set<Class<?>> allControlellers = cdiExtension.getControllers();
+		final Map<String, ControllerClass> appControllers = new HashMap<String, ControllerClass>();
 
-		for (final Class<?> controllerClass : allControlellers) {
+		final List<Module> sortedModules = createSortedModules(modules);
+		final List<ControllerClass> allControlellers = getSortedControllers();
+
+		for (final ControllerClass controllerClass : allControlellers) {
 			boolean controllerIsInModule = false;
-			for (final io.pallas.core.module.Module moduleContext : modules.values()) {
+
+			for (final Module moduleContext : modules) {
 				controllerIsInModule = moduleContext.getControllers().containsValue(controllerClass);
 				if (controllerIsInModule) {
 					break;
@@ -108,7 +118,7 @@ public class ModuleManager {
 			}
 
 			if (!controllerIsInModule) {
-				final String controllerName = getControllerName(controllerClass);
+				final String controllerName = controllerClass.getName();
 
 				checkControllerInModule(application.getName(), appControllers, controllerClass, controllerName);
 
@@ -116,33 +126,60 @@ public class ModuleManager {
 			}
 		}
 
-		return new ApplicationModule(appControllers, modules);
+		final ApplicationModule applicationModule = new ApplicationModule(modules);
+
+		// add controllers
+		for (final Entry<String, ControllerClass> controllerEntry : appControllers.entrySet()) {
+			applicationModule.addController(controllerEntry.getKey(), controllerEntry.getValue());
+		}
+
+		return applicationModule;
 	}
 
-	private io.pallas.core.module.Module createModuleContext(final ModulePackage modulePackage, final String moduleAlias) {
+	private List<Module> createSortedModules(final Set<Module> modules) {
+		final List<Module> sortedModules = new ArrayList<Module>(modules);
+
+		Collections.sort(sortedModules, new Comparator<Module>() {
+			@Override
+			public int compare(final Module o1, final Module o2) {
+				return o1.getModulePackage().getName().compareTo(o2.getModulePackage().getName());
+			}
+		});
+
+		return sortedModules;
+	}
+
+	private List<ControllerClass> getSortedControllers() {
+		final List<ControllerClass> controllerList = new ArrayList<>(cdiExtension.getControllers());
+
+		// IMPORTANT! sort them
+		Collections.sort(controllerList);
+
+		return controllerList;
+	}
+
+	protected Module createModuleContext(final ModulePackage modulePackage, final String moduleAlias) {
 
 		final Package pack = modulePackage.getModulePackage();
 		final Map<String, Object> config = configuration.getValue(APPLICATION_MODULES_CONFIG + "." + pack.getName(), new HashMap<String, Object>());
-		final Map<String, Class<?>> controllers = getControllers(pack);
 
-		// TODO children
-		return new io.pallas.core.module.Module(moduleAlias, pack, config, controllers, new HashMap<String, io.pallas.core.module.Module>());
+		return new Module(moduleAlias, pack, config);
 	}
 
-	private Map<String, Class<?>> getControllers(final Package pack) {
+	protected Map<String, ControllerClass> getControllers(final Package pack) {
 
-		final Map<String, Class<?>> controllerMap = new HashMap<String, Class<?>>();
+		final Map<String, ControllerClass> controllerMap = new HashMap<String, ControllerClass>();
 
-		final Set<Class<?>> controllers = cdiExtension.getControllers();
-		for (final Class<?> controllerClass : controllers) {
+		final Set<ControllerClass> controllers = cdiExtension.getControllers();
+		for (final ControllerClass controllerClass : controllers) {
 
-			final String controllerPackage = controllerClass.getPackage().getName();
+			final String controllerPackage = controllerClass.getType().getPackage().getName();
 
 			// TODO handle module hierarchy
 			if (controllerPackage.startsWith(pack.getName())) { // controller is
 				// in the module
 
-				final String controllerName = getControllerName(controllerClass);
+				final String controllerName = controllerClass.getName();
 
 				checkControllerInModule(pack.getName(), controllerMap, controllerClass, controllerName);
 
@@ -153,14 +190,15 @@ public class ModuleManager {
 		return Collections.unmodifiableMap(controllerMap);
 	}
 
-	private void checkControllerInModule(final String moduleName, final Map<String, Class<?>> controllerMap, final Class<?> controllerClass, final String controllerName) {
+	protected void checkControllerInModule(final String moduleName, final Map<String, ControllerClass> controllerMap, final ControllerClass controllerClass,
+			final String controllerName) {
 		if (controllerMap.containsKey(controllerName)) {
 			throw new DeploymentException(String.format("Module '%s' has already controller with name: %s, %s. Conflicted: %s", moduleName, controllerName,
-			        controllerMap.get(controllerName).getCanonicalName(), controllerClass.getCanonicalName()));
+					controllerMap.get(controllerName).getType().getCanonicalName(), controllerClass.getType().getCanonicalName()));
 		}
 	}
 
-	private String getControllerName(final Class<?> controllerClass) {
+	protected String getControllerName(final Class<?> controllerClass) {
 		return controllerClass.getAnnotation(Controller.class).value();
 	}
 
@@ -201,7 +239,7 @@ public class ModuleManager {
 	 */
 	private String getCodedAlias(final Package modulePackage) {
 
-		final Module annotation = modulePackage.getAnnotation(Module.class);
+		final io.pallas.core.annotations.Module annotation = modulePackage.getAnnotation(io.pallas.core.annotations.Module.class);
 		final String annotationAlias = annotation.value();
 		if (Strings.isEmpty(annotationAlias)) {
 			final String packageName = modulePackage.getName();

@@ -3,6 +3,7 @@ package io.pallas.core.cdi;
 import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.Module;
 import io.pallas.core.annotations.Startup;
+import io.pallas.core.controller.ControllerClass;
 import io.pallas.core.controller.action.param.ActionParamProducer;
 import io.pallas.core.module.ModulePackage;
 
@@ -34,7 +35,7 @@ public class PallasCdiExtension implements Extension {
 	private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
 
 	private final Set<ModulePackage> modules = new HashSet<ModulePackage>();
-	private final Set<Class<?>> controllers = new HashSet<Class<?>>();
+	private final Set<ControllerClass> controllers = new HashSet<ControllerClass>();
 
 	private final Set<Class<? extends ActionParamProducer>> actionParamProducers = new HashSet<Class<? extends ActionParamProducer>>();
 	private final List<StartupBean> startupBeans = new ArrayList<>();
@@ -43,7 +44,7 @@ public class PallasCdiExtension implements Extension {
 		final Package modulePack = pat.getAnnotatedType().getJavaClass().getPackage();
 
 		if (modulePack.isAnnotationPresent(Module.class)) { // double check on
-			                                                // class
+			// class
 			modules.add(new ModulePackage(modulePack));
 		}
 	}
@@ -52,11 +53,11 @@ public class PallasCdiExtension implements Extension {
 		final Class<T> javaClass = pat.getAnnotatedType().getJavaClass();
 
 		if (javaClass.isAnnotationPresent(Controller.class)) { // double check
-			                                                   // because CDI
-			                                                   // 1.1 just
-			                                                   // recommends
-			                                                   // @WithAnnotations
-			controllers.add(javaClass);
+			// because CDI
+			// 1.1 just
+			// recommends
+			// @WithAnnotations
+			controllers.add(new ControllerClass(javaClass));
 		}
 	}
 
@@ -85,18 +86,17 @@ public class PallasCdiExtension implements Extension {
 	public void afterBeanDiscovery(@Observes final AfterBeanDiscovery abv) {
 
 		try {
-			checkControllerNames();
 
 			if (controllers.isEmpty()) {
 				LOGGER.warn("No controller class found.");
 			} else {
-				for (final Class<?> controller : controllers) {
-					LOGGER.info(String.format("Controller class: %s", controller.getCanonicalName()));
+				for (final ControllerClass controller : controllers) {
+					LOGGER.info(String.format("Controller class: %s", controller.getType().getCanonicalName()));
 				}
 			}
 
 		} catch (final Throwable throwable) { // any exception invalidates
-			                                  // deploy
+			// deploy
 			abv.addDefinitionError(throwable);
 		}
 	}
@@ -112,28 +112,11 @@ public class PallasCdiExtension implements Extension {
 		}
 	}
 
-	private void checkControllerNames() {
-
-		final Set<String> names = new HashSet<String>();
-
-		for (final Class<?> controllerClass : controllers) {
-
-			final Controller annotation = controllerClass.getAnnotation(Controller.class);
-			final String name = annotation.value();
-
-			if (names.contains(name)) {
-				throw new DeploymentException("Duplicate controller name: " + name);
-			}
-
-			names.add(name);
-		}
-	}
-
 	public Set<ModulePackage> getModules() {
 		return Collections.unmodifiableSet(modules);
 	}
 
-	public Set<Class<?>> getControllers() {
+	public Set<ControllerClass> getControllers() {
 		return Collections.unmodifiableSet(controllers);
 	}
 

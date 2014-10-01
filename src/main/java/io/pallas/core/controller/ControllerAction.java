@@ -9,42 +9,42 @@ import java.lang.reflect.Method;
  */
 public class ControllerAction {
 
-    private final Object controller;
+	private final Object controller;
 
-    private final Method action;
+	private final Method action;
 
-    private final Class<?> controllerClass;
+	private final ControllerClass controllerClass;
 
-    /**
-     * @param controller
-     * @param action
-     * @param controllerClass
-     */
-    public ControllerAction(final Object controller, final Method action, final Class<?> controllerClass) {
-        super();
-        this.controller = controller;
-        this.action = action;
-        this.controllerClass = controllerClass;
-    }
+	/**
+	 * @param controller
+	 * @param action
+	 * @param controllerClass
+	 */
+	public ControllerAction(final Object controller, final Method action, final ControllerClass controllerClass) {
+		super();
+		this.controller = controller;
+		this.action = action;
+		this.controllerClass = controllerClass;
+	}
 
-    public Object getController() {
-        return controller;
-    }
+	public Object getController() {
+		return controller;
+	}
 
-    public Method getAction() {
-        return action;
-    }
+	public Method getAction() {
+		return action;
+	}
 
-    /**
-     * @return the controllerClass
-     */
-    public Class<?> getControllerClass() {
-        return controllerClass;
-    }
+	/**
+	 * @return the controllerClass
+	 */
+	public ControllerClass getControllerClass() {
+		return controllerClass;
+	}
 
-    @Override
-    public String toString() {
+	@Override
+	public String toString() {
 
-        return "[" + controllerClass.getCanonicalName() + "#" + action.getName() + "]";
-    }
+		return "[" + controllerClass.getType().getCanonicalName() + "#" + action.getName() + "]";
+	}
 }

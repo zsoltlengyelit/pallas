@@ -1,6 +1,6 @@
 package io.pallas.core.module;
 
-import java.util.Map;
+import java.util.Set;
 
 /**
  * Dedicated context for application itself. There is only one
@@ -17,8 +17,11 @@ public class ApplicationModule extends Module {
 	 * @param config
 	 * @param controllers
 	 */
-	public ApplicationModule(final Map<String, Class<?>> controllers, final Map<String, Module> children) {
-		super("", null, null, controllers, children);
+	public ApplicationModule(final Set<Module> children) {
+		super("", null, null);
+		for (final Module child : children) {
+			addChild(child);
+		}
 	}
 
 }

@@ -1,7 +1,12 @@
 package io.pallas.core.module;
 
+import io.pallas.core.controller.ControllerClass;
+
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.common.base.Strings;
 
@@ -19,18 +24,15 @@ public class Module {
 	// TOOD change to Configuration
 	private final Map<String, Object> config;
 
-	private final Map<String, Class<?>> controllers;
+	private final Map<String, ControllerClass> controllers = new HashMap<String, ControllerClass>();
 
-	private final Map<String, Module> children;
+	private final Set<Module> children = new HashSet<Module>();
 
-	public Module(final String alias, final Package modulePackage, final Map<String, Object> config, final Map<String, Class<?>> controllers,
-	        final Map<String, Module> children) {
+	public Module(final String alias, final Package modulePackage, final Map<String, Object> config) {
 		super();
 		this.alias = alias;
 		this.modulePackage = modulePackage;
 		this.config = config;
-		this.controllers = controllers;
-		this.children = children;
 	}
 
 	public String getAlias() {
@@ -45,12 +47,25 @@ public class Module {
 		return config;
 	}
 
-	public Map<String, Class<?>> getControllers() {
+	public Map<String, ControllerClass> getControllers() {
 		return controllers;
 	}
 
-	public Map<String, Module> getChildren() {
+	public void addController(final String name, final ControllerClass controller) {
+		getControllers().put(name, controller);
+	}
+
+	public Set<Module> getChildren() {
 		return children;
+	}
+
+	/**
+	 *
+	 * @param module
+	 *            child module
+	 */
+	public void addChild(final Module module) {
+		getChildren().add(module);
 	}
 
 	@Override
@@ -67,17 +82,17 @@ public class Module {
 		builder.append(Strings.repeat("\t", indent));
 		builder.append(alias);
 		builder.append("\n");
-		for (final Entry<String, Class<?>> controller : getControllers().entrySet()) {
+		for (final Entry<String, ControllerClass> controller : getControllers().entrySet()) {
 			builder.append(Strings.repeat("\t", indent));
 			builder.append("|- ");
-			builder.append(controller.getKey() + ": " + controller.getValue().getSimpleName());
+			builder.append(controller.getKey() + ": " + controller.getValue().getType().getSimpleName());
 			builder.append("\n");
 		}
 
 		if (!getChildren().isEmpty()) {
 			builder.append(Strings.repeat("\t", indent));
 			builder.append("modules: \n");
-			for (final Module child : getChildren().values()) {
+			for (final Module child : getChildren()) {
 				child.appendToString(builder, indent + 1);
 			}
 		}
