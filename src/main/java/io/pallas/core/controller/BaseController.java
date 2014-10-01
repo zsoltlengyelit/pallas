@@ -1,11 +1,12 @@
 package io.pallas.core.controller;
 
 import io.pallas.core.view.Model;
-import io.pallas.core.view.AbstractView;
+import io.pallas.core.view.View;
 import io.pallas.core.view.ViewFactory;
 
 import java.io.InputStream;
 
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,26 +19,46 @@ public class BaseController {
     private HttpServletRequest request;
 
     @Inject
-    private ViewFactory viewFactory;
+    private Instance<ViewFactory> viewFactory;
 
-    protected AbstractView view() {
-        return viewFactory.createFromPath(null);
+    protected View view() {
+        return viewFactory.get().createFromPath(null);
     }
 
-    protected AbstractView view(final String path) {
-        return viewFactory.createFromPath(path);
+    protected View view(final String path) {
+        return viewFactory.get().createFromPath(path);
     }
 
-    protected AbstractView view(final InputStream inputStream) {
-        return viewFactory.create(inputStream);
+    protected View view(final InputStream inputStream) {
+        return viewFactory.get().create(inputStream);
     }
 
-    protected AbstractView view(final String path, final Model model) {
-        return viewFactory.create(path, model);
+    protected View view(final String path, final Model model) {
+        return viewFactory.get().create(path, model);
     }
 
-    protected AbstractView view(final Model model) {
-        return viewFactory.create(null, model);
+    protected View view(final Model model) {
+        return viewFactory.get().create(null, model);
+    }
+
+    protected View htmlView() {
+        return viewFactory.get().createFromPath(null);
+    }
+
+    protected View htmlView(final String path) {
+        return viewFactory.get().createHtmlFromPath(path);
+    }
+
+    protected View htmlView(final InputStream inputStream) {
+        return viewFactory.get().createHtml(inputStream);
+    }
+
+    protected View htmlView(final String path, final Model model) {
+        return viewFactory.get().createHtml(path, model);
+    }
+
+    protected View htmlView(final Model model) {
+        return viewFactory.get().createHtml(null, model);
     }
 
     protected HttpServletRequest request() {

@@ -5,10 +5,13 @@ import io.pallas.core.annotations.Configured;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerNameResolver;
 import io.pallas.core.execution.InternalServerErrorException;
+import io.pallas.core.view.html.HtmlView;
 import io.pallas.core.view.wiidget.integration.CdiEngine;
 import io.pallas.core.view.wiidget.integration.WiidgeFileView;
 import io.pallas.core.view.wiidget.integration.WiidgetView;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
@@ -48,19 +51,39 @@ public class ViewFactory {
     @Inject
     private ControllerNameResolver controllerNameResolver;
 
-    public AbstractView createFromPath(final String view) {
+    public View createFromPath(final String view) {
         return create(view, null);
     }
 
-    public AbstractView create(final InputStream inputStream) {
+    public View create(final InputStream inputStream) {
         return new WiidgetView(inputStream, wiidgetFactory);
     }
 
-    public AbstractView create(final String view, final Model model) {
+    public View create(final String view, final Model model) {
         final String realPath = getViewPath(view);
 
         try {
             return new WiidgeFileView(realPath, model, wiidgetFactory);
+        } catch (final FileNotFoundException exception) {
+            throw new InternalServerErrorException(exception);
+        }
+    }
+
+    // html
+
+    public View createHtmlFromPath(final String view) {
+        return createHtml(view, null);
+    }
+
+    public View createHtml(final InputStream inputStream) {
+        return new HtmlView(inputStream);
+    }
+
+    public View createHtml(final String view, final Model model) {
+        final String realPath = getViewPath(view);
+
+        try {
+            return new HtmlView(new FileInputStream(realPath), model);
         } catch (final FileNotFoundException exception) {
             throw new InternalServerErrorException(exception);
         }
@@ -92,10 +115,17 @@ public class ViewFactory {
             filePath = String.format("%s/%s", getControllerName(), view);
         }
 
-        final String viewPath = viewBasePath + '/' + filePath + viewFileSuffix;
-        final String realPath = request.getServletContext().getRealPath(viewPath);
+        // at first try without suffix
+        String viewPath = viewBasePath + '/' + filePath;
+        String realPath = request.getServletContext().getRealPath(viewPath);
+
+        if (!new File(realPath).isFile()) {
+            viewPath = viewBasePath + '/' + filePath + viewFileSuffix;
+            realPath = request.getServletContext().getRealPath(viewPath);
+        }
 
         return realPath;
+
     }
 
     private String getControllerName() {
