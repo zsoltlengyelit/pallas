@@ -1,7 +1,6 @@
 package io.pallas.core.view.wiidget.integration;
 
 import io.pallas.core.WebApplication;
-import io.pallas.core.controller.ControllerNameResolver;
 import io.pallas.core.routing.LinkBuilder;
 
 import javax.annotation.PostConstruct;
@@ -36,9 +35,6 @@ public class CdiWiidgetContext extends DefaultContext {
 
     @Inject
     private Instance<HttpServletResponse> response;
-
-    @Inject
-    private ControllerNameResolver controllerNameResolver;
 
     @Inject
     private Provider<LinkBuilder> linkBuilder;

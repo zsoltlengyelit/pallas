@@ -1,13 +1,9 @@
 package io.pallas.core.view.wiidget.integration;
 
-import io.pallas.core.view.Model;
 import io.pallas.core.view.AbstractView;
+import io.pallas.core.view.Model;
 
-import java.io.IOException;
 import java.io.InputStream;
-
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
 
 import com.landasource.wiidget.Renderer;
 import com.landasource.wiidget.engine.Engine;
@@ -41,26 +37,20 @@ public class WiidgetView extends AbstractView {
     }
 
     @Override
-    public void render(final HttpServletResponse response) {
-        try {
+    public String getContent() {
 
-            final Model model = getModel();
-            if (null != model) {
-                getEngine().getWiidgetContext().setAll(model);
-            }
-
-            final String result = Renderer.create(getEngine()).render(inputStream);
-
-            response.setHeader("Content-Type", MediaType.TEXT_HTML);
-            response.getWriter().append(result);
-
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
+        final Model model = getModel();
+        if (null != model) {
+            getEngine().getContext().setAll(model);
         }
+
+        final String result = Renderer.create(getEngine()).render(inputStream);
+
+        return result;
     }
 
-	private Engine getEngine() {
-		return engine;
-	}
+    private Engine getEngine() {
+        return engine;
+    }
 
 }

@@ -1,6 +1,7 @@
 package io.pallas.core.routing;
 
 import io.pallas.core.configuration.Configuration;
+import io.pallas.core.controller.ControllerClass;
 import io.pallas.core.controller.ControllerNameResolver;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class LinkBuilder {
 
     public String of(final Class<?> controller) {
 
-        final String controllerName = controllerNameResolver.getControllerName(controller);
+        final String controllerName = getControllerName(controller);
 
         final StringBuilder urlBuilder = new StringBuilder();
 
@@ -67,7 +68,7 @@ public class LinkBuilder {
 
         final Class<?> controller = type.getWiidgetClass();
 
-        final String controllerName = controllerNameResolver.getControllerName(controller);
+        final String controllerName = getControllerName(controller);
 
         final StringBuilder urlBuilder = new StringBuilder();
 
@@ -103,7 +104,7 @@ public class LinkBuilder {
     public String of(final ClassWiidgetResource classWiidgetResource) {
         final Class<?> controller = classWiidgetResource.getWiidgetClass();
 
-        final String controllerName = controllerNameResolver.getControllerName(controller);
+        final String controllerName = getControllerName(controller);
 
         final StringBuilder urlBuilder = new StringBuilder();
 
@@ -112,6 +113,10 @@ public class LinkBuilder {
         urlBuilder.append(controllerName);
 
         return of(urlBuilder.toString());
+    }
+
+    private String getControllerName(final Class<?> controller) {
+        return controllerNameResolver.getControllerName(new ControllerClass(controller));
     }
 
     public String of(final ClassWiidgetResource classWiidgetResource, final String string) {

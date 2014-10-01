@@ -1,54 +1,67 @@
 package io.pallas.core.view.wiidget;
 
-import io.pallas.core.execution.Response;
-
-import java.io.IOException;
+import io.pallas.core.view.Model;
+import io.pallas.core.view.View;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
 
 import com.landasource.wiidget.Renderer;
 import com.landasource.wiidget.engine.Engine;
 
 /**
- *
  * @author lzsolt
- *
  */
-public abstract class WiidgetPage extends com.landasource.wiidget.WiidgetView implements Response{
+public class WiidgetPage extends com.landasource.wiidget.WiidgetView implements View {
 
-	@Inject
-	private Engine engine;
+    @Inject
+    private Engine engine;
 
-	public WiidgetPage() {
-		super(null);
-	}
+    private final Model model = new Model();
 
-	@Override
-	public void init() {
-		super.init();
+    private boolean useTemplate = true;
 
-		getWiidgetContext().set("this", this);
-	}
+    public WiidgetPage() {
+        super(null);
+    }
 
-	@Override
-	public void render(HttpServletResponse response) {
-		try {
+    @Override
+    public void init() {
+        super.init();
 
-			final String result = Renderer.create(getEngine()).render(this);
+        getWiidgetContext().set("this", this);
+    }
 
-			response.setHeader("Content-Type", MediaType.TEXT_HTML);
-			response.getWriter().append(result);
+    @Override
+    public String getContent() {
+        getEngine().getContext().setAll(getModel());
+        return Renderer.create(getEngine()).render(this);
+    }
 
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
+    @Override
+    protected Engine getEngine() {
+        return engine;
+    }
 
-	@Override
-	protected Engine getEngine() {
-		return engine;
-	}
+    @Override
+    public Model getModel() {
+        return model;
+    }
+
+    @Override
+    public View set(final String name, final Object value) {
+        getModel().set(name, value);
+        return this;
+    }
+
+    @Override
+    public void setTemplateUsage(final boolean useTemplate) {
+        this.useTemplate = useTemplate;
+
+    }
+
+    @Override
+    public boolean useTemplate() {
+        return useTemplate;
+    }
 
 }

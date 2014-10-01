@@ -1,6 +1,5 @@
 package io.pallas.core.view;
 
-
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
@@ -9,6 +8,8 @@ public abstract class AbstractView implements View {
     private final String path;
 
     private Model model;
+
+    private boolean useTemplate = true;
 
     public AbstractView(final String path) {
         this(path, new Model());
@@ -34,6 +35,7 @@ public abstract class AbstractView implements View {
     /**
      * @return the model
      */
+    @Override
     public Model getModel() {
         if (null == model) {
             model = new Model();
@@ -48,9 +50,20 @@ public abstract class AbstractView implements View {
      * @param value
      * @return this view
      */
+    @Override
     public AbstractView set(final String name, final Object value) {
         getModel().set(name, value);
         return this;
+    }
+
+    @Override
+    public void setTemplateUsage(final boolean useTemplate) {
+        this.useTemplate = useTemplate;
+    }
+
+    @Override
+    public boolean useTemplate() {
+        return useTemplate;
     }
 
 }
