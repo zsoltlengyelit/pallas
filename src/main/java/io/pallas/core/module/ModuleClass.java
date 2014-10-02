@@ -5,34 +5,34 @@ package io.pallas.core.module;
  * @author lzsolt
  *
  */
-public class ModulePackage {
+public class ModuleClass {
 
 	/** Root package of module. */
-	private Package modulePackage;
+	private final Class<? extends Module> modulePackage;
 
-	public ModulePackage(Package modulePackage) {
+	public ModuleClass(final Class<? extends Module> modulePackage) {
 		super();
 		this.modulePackage = modulePackage;
 	}
 
-
-	public Package getModulePackage() {
+	public Class<? extends Module> getType() {
 		return modulePackage;
 	}
 
+	public String getPackageName() {
+		return getType().getPackage().getName();
+	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result
-				+ ((modulePackage == null) ? 0 : modulePackage.hashCode());
+		result = prime * result + ((modulePackage == null) ? 0 : modulePackage.hashCode());
 		return result;
 	}
 
-
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (this == obj) {
 			return true;
 		}
@@ -42,7 +42,7 @@ public class ModulePackage {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		ModulePackage other = (ModulePackage) obj;
+		final ModuleClass other = (ModuleClass) obj;
 		if (modulePackage == null) {
 			if (other.modulePackage != null) {
 				return false;
@@ -52,7 +52,5 @@ public class ModulePackage {
 		}
 		return true;
 	}
-
-
 
 }

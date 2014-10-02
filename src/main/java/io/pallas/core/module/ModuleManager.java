@@ -3,18 +3,19 @@ package io.pallas.core.module;
 import io.pallas.core.WebApplication;
 import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.Startup;
+import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
 import io.pallas.core.configuration.Configuration;
 import io.pallas.core.controller.ControllerClass;
+import io.pallas.core.util.collections.Maps;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -32,169 +33,173 @@ import com.landasource.wiidget.util.Strings;
 @Startup
 public class ModuleManager {
 
-    public static final String APPLICATION_MODULES_CONFIG = "application.modules";
+	public static final String APPLICATION_MODULES_CONFIG = "application.modules";
 
-    public static final String MODULE_ALIAS_CONFIG = "moduleAlias";
+	public static final String MODULE_ALIAS_CONFIG = "moduleAlias";
 
-    @Inject
-    private PallasCdiExtension cdiExtension;
+	@Inject
+	private PallasCdiExtension cdiExtension;
 
-    @Inject
-    private Configuration configuration;
+	@Inject
+	private Configuration configuration;
 
-    @Inject
-    private WebApplication application;
+	@Inject
+	private WebApplication application;
 
-    @Inject
-    private Logger logger;
+	@Inject
+	private Logger logger;
 
-    private ApplicationModule moduleContext;
+	@Inject
+	private LookupService lookupService;
 
-    @PostConstruct
-    private void init() {
-        getApplicationModuleContext(); // creation will check modules to be valid
+	private ApplicationModule moduleContext;
 
-        final String modulesToString = String.format("Application structure:\n%s", moduleContext);
-        logger.debug(modulesToString);
-    }
+	@PostConstruct
+	private void init() {
+		getApplicationModuleContext(); // creation will check modules to be
+		// valid
 
-    /**
-     * @return map of modules
-     */
-    @Produces
-    public ApplicationModule getApplicationModuleContext() {
+		final String modulesToString = String.format("Application structure:\n%s", moduleContext);
+		logger.debug(modulesToString);
+	}
 
-        if (null == moduleContext) { // init contexts
+	/**
+	 * @return map of modules
+	 */
+	@Produces
+	public ApplicationModule getApplicationModuleContext() {
 
-            final List<Module> modules = new ArrayList<Module>();
+		if (null == moduleContext) { // init contexts
 
-            final Set<ModulePackage> modulePackages = cdiExtension.getModules();
-            for (final ModulePackage modulePackage : modulePackages) {
+			// sort. Important to modules be in right order
+			final Map<Module, String> modules = new TreeMap<Module, String>(new Comparator<Module>() {
+				@Override
+				public int compare(final Module o1, final Module o2) {
+					return o1.getModulePackage().getName().compareTo(o2.getModulePackage().getName());
+				}
+			});
 
-                final String moduleAlias = getModuleAlias(modulePackage);
+			final Set<ModuleClass> modulePackages = cdiExtension.getModules();
+			for (final ModuleClass modulePackage : modulePackages) {
 
-                final Module module = createModuleContext(modulePackage, moduleAlias);
-                modules.add(module); // put to map
-            }
+				final String moduleAlias = getModuleAlias(modulePackage);
 
-            // sort. Important to modules be in right order
-            Collections.sort(modules, new Comparator<Module>() {
-                @Override
-                public int compare(final Module o1, final Module o2) {
-                    return o1.getModulePackage().getName().compareTo(o2.getModulePackage().getName());
-                }
-            });
+				final Module module = createModuleContext(modulePackage, moduleAlias);
+				modules.put(module, moduleAlias); // put to map
+			}
 
-            // create module for application
-            final ApplicationModule applicationModuleContext = createApplicationModule(modules);
+			final Map<String, Module> flippedMap = new LinkedHashMap<String, Module>(); // use linked map to keep insertation order
+			Maps.flip(modules, flippedMap); // flip keys and values
 
-            moduleContext = applicationModuleContext;
-        }
-        return moduleContext;
-    }
+			// create module for application
+			final ApplicationModule applicationModuleContext = createApplicationModule(flippedMap);
 
-    protected ApplicationModule createApplicationModule(final Collection<Module> modules) {
+			moduleContext = applicationModuleContext;
+		}
+		return moduleContext;
+	}
 
-        final ApplicationModule applicationModule = new ApplicationModule(application.getName(), modules);
+	protected ApplicationModule createApplicationModule(final Map<String, Module> modules) {
 
-        // add controllers
-        for (final ControllerClass controllerClass : cdiExtension.getControllers()) {
-            applicationModule.addController(controllerClass);
-        }
+		final ApplicationModule applicationModule = new ApplicationModule(application.getName(), modules);
 
-        return applicationModule;
-    }
+		// add controllers
+		for (final ControllerClass controllerClass : cdiExtension.getControllers()) {
+			applicationModule.addController(controllerClass);
+		}
 
-    protected Module createModuleContext(final ModulePackage modulePackage, final String moduleAlias) {
+		return applicationModule;
+	}
 
-        final Package pack = modulePackage.getModulePackage();
-        final Map<String, Object> config = configuration.getValue(APPLICATION_MODULES_CONFIG + "." + pack.getName(), new HashMap<String, Object>());
+	protected Module createModuleContext(final ModuleClass moduleClass, final String moduleAlias) {
 
-        return new Module(moduleAlias, pack, config);
-    }
+		final Class<? extends Module> moduleType = moduleClass.getType();
+		final Module module = lookupService.lookup(moduleType);
 
-    protected Map<String, ControllerClass> getControllers(final Package pack) {
+		return module;
+	}
 
-        final Map<String, ControllerClass> controllerMap = new HashMap<String, ControllerClass>();
+	protected Map<String, ControllerClass> getControllers(final Package pack) {
 
-        final Set<ControllerClass> controllers = cdiExtension.getControllers();
-        for (final ControllerClass controllerClass : controllers) {
+		final Map<String, ControllerClass> controllerMap = new HashMap<String, ControllerClass>();
 
-            final String controllerPackage = controllerClass.getType().getPackage().getName();
+		final Set<ControllerClass> controllers = cdiExtension.getControllers();
+		for (final ControllerClass controllerClass : controllers) {
 
-            if (controllerPackage.startsWith(pack.getName())) { // controller is
-                final String controllerName = controllerClass.getName();
-                controllerMap.put(controllerName, controllerClass);
-            }
-        }
+			final String controllerPackage = controllerClass.getType().getPackage().getName();
 
-        return Collections.unmodifiableMap(controllerMap);
-    }
+			if (controllerPackage.startsWith(pack.getName())) { // controller is
+				final String controllerName = controllerClass.getName();
+				controllerMap.put(controllerName, controllerClass);
+			}
+		}
 
-    protected String getControllerName(final Class<?> controllerClass) {
-        return controllerClass.getAnnotation(Controller.class).value();
-    }
+		return Collections.unmodifiableMap(controllerMap);
+	}
 
-    /**
-     * Priority of checking: config, annotation, package name.
-     *
-     * @return alias of module.
-     */
-    public String getModuleAlias(final ModulePackage modPackage) {
+	protected String getControllerName(final Class<?> controllerClass) {
+		return controllerClass.getAnnotation(Controller.class).value();
+	}
 
-        final Package modulePackage = modPackage.getModulePackage();
-        final String packageName = modulePackage.getName();
-        final Map<String, Object> modulesConfig = configuration.getValue(APPLICATION_MODULES_CONFIG, new HashMap<String, Object>());
+	/**
+	 * Priority of checking: config, annotation, package name.
+	 *
+	 * @return alias of module.
+	 */
+	public String getModuleAlias(final ModuleClass moduleClass) {
 
-        final Object moduleConfig = modulesConfig.get(packageName);
-        if (null == moduleConfig) {
+		final String packageName = moduleClass.getPackageName();
+		final Map<String, Object> modulesConfig = configuration.getValue(APPLICATION_MODULES_CONFIG, new HashMap<String, Object>());
 
-            return getCodedAlias(modulePackage);
+		final Object moduleConfig = modulesConfig.get(packageName);
+		if (null == moduleConfig) {
 
-        } else {// module has config
+			return getCodedAlias(moduleClass);
 
-            final String moduleAlias = getAliasFromConfig(moduleConfig);
-            if (null == moduleAlias) {
-                return getCodedAlias(modulePackage);
-            } else {
-                return moduleAlias;
-            }
-        }
+		} else {// module has config
 
-    }
+			final String moduleAlias = getAliasFromConfig(moduleConfig);
+			if (null == moduleAlias) {
+				return getCodedAlias(moduleClass);
+			} else {
+				return moduleAlias;
+			}
+		}
 
-    /**
-     * Gives alias of modules form annotation of package name.
-     *
-     * @param modulePackage
-     *            package
-     * @return alias
-     */
-    private String getCodedAlias(final Package modulePackage) {
+	}
 
-        final io.pallas.core.annotations.Module annotation = modulePackage.getAnnotation(io.pallas.core.annotations.Module.class);
-        final String annotationAlias = annotation.value();
-        if (Strings.isEmpty(annotationAlias)) {
-            final String packageName = modulePackage.getName();
+	/**
+	 * Gives alias of modules form annotation of package name.
+	 *
+	 * @param moduleClass
+	 *            package
+	 * @return alias
+	 */
+	private String getCodedAlias(final ModuleClass moduleClass) {
 
-            final String[] splited = packageName.split("\\.");
-            return splited[splited.length - 1]; // las part of package name
+		final io.pallas.core.annotations.Module annotation = moduleClass.getType().getAnnotation(io.pallas.core.annotations.Module.class);
+		final String annotationAlias = annotation.value();
+		if (Strings.isEmpty(annotationAlias)) {
+			final String packageName = moduleClass.getPackageName();
 
-        } else {
-            return annotationAlias;
-        }
-    }
+			final String[] splited = packageName.split("\\.");
+			return splited[splited.length - 1]; // last part of package name
 
-    @SuppressWarnings("unchecked")
-    private String getAliasFromConfig(final Object moduleConfig) {
-        if (moduleConfig instanceof String) {
-            return (String) moduleConfig;
-        } else if (moduleConfig instanceof Map) {
-            final String alias = (String) ((Map<String, Object>) moduleConfig).get(MODULE_ALIAS_CONFIG);
-            return alias;
+		} else {
+			return annotationAlias;
+		}
+	}
 
-        } else {
-            throw new IllegalModuleConfigException("Illegal value: " + String.valueOf(moduleConfig));
-        }
-    }
+	@SuppressWarnings("unchecked")
+	private String getAliasFromConfig(final Object moduleConfig) {
+		if (moduleConfig instanceof String) {
+			return (String) moduleConfig;
+		} else if (moduleConfig instanceof Map) {
+			final String alias = (String) ((Map<String, Object>) moduleConfig).get(MODULE_ALIAS_CONFIG);
+			return alias;
+
+		} else {
+			throw new IllegalModuleConfigException("Illegal value: " + String.valueOf(moduleConfig));
+		}
+	}
 }

@@ -5,7 +5,7 @@ import io.pallas.core.annotations.Module;
 import io.pallas.core.annotations.Startup;
 import io.pallas.core.controller.ControllerClass;
 import io.pallas.core.controller.action.param.ActionParamProducer;
-import io.pallas.core.module.ModulePackage;
+import io.pallas.core.module.ModuleClass;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -34,19 +34,24 @@ public class PallasCdiExtension implements Extension {
 
 	private static final org.apache.log4j.Logger LOGGER = org.apache.log4j.Logger.getLogger(PallasCdiExtension.class);
 
-	private final Set<ModulePackage> modules = new HashSet<ModulePackage>();
+	private final Set<ModuleClass> modules = new HashSet<ModuleClass>();
 	private final Set<ControllerClass> controllers = new HashSet<ControllerClass>();
 
 	private final Set<Class<? extends ActionParamProducer>> actionParamProducers = new HashSet<Class<? extends ActionParamProducer>>();
 	private final List<StartupBean> startupBeans = new ArrayList<>();
 
-	public <T> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
-		final Package modulePack = pat.getAnnotatedType().getJavaClass().getPackage();
+	public <T extends io.pallas.core.module.Module> void processModule(@Observes @WithAnnotations({ Module.class }) final ProcessAnnotatedType<T> pat) {
+		final Class<T> moduleClass = pat.getAnnotatedType().getJavaClass();
 
-		if (modulePack.isAnnotationPresent(Module.class)) { // double check on
-			// class
-			modules.add(new ModulePackage(modulePack));
-		}
+		//		if ((!io.pallas.core.module.Module.class.isAssignableFrom(moduleClass) && moduleClass.isAnnotationPresent(Module.class))
+		//		        || (io.pallas.core.module.Module.class.isAssignableFrom(moduleClass) && !moduleClass.isAnnotationPresent(Module.class))) {
+		//
+		//			throw new DeploymentException(String.format("Illegal module: %s. Class must extends %s and have @%s annotation", moduleClass.getCanonicalName(),
+		//					io.pallas.core.module.Module.class.getCanonicalName(), Module.class.getCanonicalName()));
+		//		}
+
+		// class
+		modules.add(new ModuleClass(moduleClass));
 	}
 
 	public <T> void processControllers(@Observes @WithAnnotations({ Controller.class }) final ProcessAnnotatedType<T> pat) {
@@ -73,10 +78,7 @@ public class PallasCdiExtension implements Extension {
 	public <T> void procesStartupBeans(@Observes final ProcessBean<T> event) {
 		final Annotated annotated = event.getAnnotated();
 		if (annotated.isAnnotationPresent(Startup.class)/*
-		 * && annotated.
-		 * isAnnotationPresent
-		 * (ApplicationScoped
-		 * .class)
+		 * && annotated. isAnnotationPresent (ApplicationScoped .class)
 		 */) {
 			final Bean<T> bean = event.getBean();
 			startupBeans.add(new StartupBean(bean, annotated.getAnnotation(Startup.class).priority()));
@@ -112,7 +114,7 @@ public class PallasCdiExtension implements Extension {
 		}
 	}
 
-	public Set<ModulePackage> getModules() {
+	public Set<ModuleClass> getModules() {
 		return Collections.unmodifiableSet(modules);
 	}
 

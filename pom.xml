@@ -8,7 +8,7 @@
 
 	<properties>
 		<rewrite.version>2.0.12.Final</rewrite.version>
-		<wiidget.version>0.1.4</wiidget.version>
+		<wiidget.version>0.1.5</wiidget.version>
 	</properties>
 
 	<dependencies>

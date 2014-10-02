@@ -4,168 +4,179 @@ import io.pallas.core.cdi.DeploymentException;
 import io.pallas.core.controller.ControllerClass;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import com.google.common.base.Strings;
 
 /**
  * @author lzsolt
  */
-public class Module {
+public abstract class Module {
 
-    private final String alias;
+	private final Map<String, ControllerClass> controllers = new HashMap<String, ControllerClass>();
 
-    private final Package modulePackage;
+	private final Map<String, Module> children = new HashMap<String, Module>();
 
-    // TOOD change to Configuration
-    private final Map<String, Object> config;
+	/**
+	 * Reference to parent.
+	 */
+	private Module parent;
 
-    private final Map<String, ControllerClass> controllers = new HashMap<String, ControllerClass>();
+	public Package getModulePackage() {
+		return getClass().getPackage();
+	}
 
-    private final Set<Module> children = new HashSet<Module>();
+	public Map<String, ControllerClass> getControllers() {
+		return controllers;
+	}
 
-    public Module(final String alias, final Package modulePackage, final Map<String, Object> config) {
-        super();
-        this.alias = alias;
-        this.modulePackage = modulePackage;
-        this.config = config;
-    }
+	/**
+	 * @param name
+	 * @param controller
+	 */
+	public void addController(final ControllerClass controller) {
 
-    public String getAlias() {
-        return alias;
-    }
+		addController(controller, true);
+	}
 
-    public Package getModulePackage() {
-        return modulePackage;
-    }
+	/**
+	 * @param name
+	 *            name (alias) of the controller
+	 * @param controller
+	 *            controller class
+	 * @param autoDiscoverPlace
+	 *            set to true when put to the appropriate module
+	 */
+	private void addController(final ControllerClass controller, final boolean autoDiscoverPlace) {
+		boolean moduleController = true;
 
-    public Map<String, Object> getConfig() {
-        return config;
-    }
+		for (final Module module : getChildren().values()) {
 
-    public Map<String, ControllerClass> getControllers() {
-        return controllers;
-    }
+			final String modulePackageName = module.getModulePackage().getName();
+			final String controllerPackageName = controller.getType().getPackage().getName();
 
-    /**
-     * @param name
-     * @param controller
-     */
-    public void addController(final ControllerClass controller) {
+			if (controllerPackageName.startsWith(modulePackageName)) {
 
-        addController(controller, true);
-    }
+				module.addController(controller);
+				moduleController = false; // not an app controller but module
+				// controller
+				break;
+			}
+		}
 
-    /**
-     * @param name
-     *            name (alias) of the controller
-     * @param controller
-     *            controller class
-     * @param autoDiscoverPlace
-     *            set to true when put to the appropriate module
-     */
-    private void addController(final ControllerClass controller, final boolean autoDiscoverPlace) {
-        boolean moduleController = true;
+		if (moduleController) {
 
-        for (final Module module : getChildren()) {
+			final String name = controller.getName();
 
-            final String modulePackageName = module.getModulePackage().getName();
-            final String controllerPackageName = controller.getType().getPackage().getName();
+			if (getControllers().containsKey(name)) {
+				final String existing = getControllers().get(name).getType().getCanonicalName();
+				final String nowOne = controller.getType().getCanonicalName();
 
-            if (controllerPackageName.startsWith(modulePackageName)) {
+				throw new DeploymentException(String.format("Module[%s] already has controller with alias: %s, (%s -> %s)", getAlias(), name, existing, nowOne));
+			}
 
-                module.addController(controller);
-                moduleController = false; // not an app controller but module controller
-                break;
-            }
-        }
+			getControllers().put(name, controller);
+		}
+	}
 
-        if (moduleController) {
+	public Map<String, Module> getChildren() {
+		return children;
+	}
 
-            final String name = controller.getName();
+	/**
+	 * @param module
+	 *            child module
+	 */
+	public void addChild(final String alias, final Module module) {
+		addChild(alias, module, true);
+	}
 
-            if (getControllers().containsKey(name)) {
-                final String existing = getControllers().get(name).getType().getCanonicalName();
-                final String nowOne = controller.getType().getCanonicalName();
+	/**
+	 * @param alias
+	 * @param module
+	 *            module to add
+	 * @param autoDiscoverPlace
+	 *            set to true when put to the appropriate module
+	 */
+	public void addChild(final String alias, final Module module, final boolean autoDiscoverPlace) {
+		boolean rootChild = true;
 
-                throw new DeploymentException(String.format("Module[%s] already has controller with alias: %s, (%s -> %s)", getAlias(), name, existing, nowOne));
-            }
+		// try to add to child
+		for (final Module child : getChildren().values()) {
 
-            getControllers().put(name, controller);
-        }
-    }
+			final String moduleName = module.getModulePackage().getName();
+			final String childName = child.getModulePackage().getName();
 
-    public Set<Module> getChildren() {
-        return children;
-    }
+			if (moduleName.startsWith(childName)) {
+				child.addChild(alias, module); // this child can contain
+				rootChild = false; // prevent to add to root
+				break;
+			}
 
-    /**
-     * @param module
-     *            child module
-     */
-    public void addChild(final Module module) {
-        addChild(module, true);
-    }
+		}
 
-    /**
-     * @param module
-     *            module to add
-     * @param autoDiscoverPlace
-     *            set to true when put to the appropriate module
-     */
-    public void addChild(final Module module, final boolean autoDiscoverPlace) {
-        boolean rootChild = true;
+		if (rootChild) {
+			module.setParent(this);
+			getChildren().put(alias, module);
+		}
+	}
 
-        // try to add to child
-        for (final Module child : getChildren()) {
+	@Override
+	public String toString() {
 
-            final String moduleName = module.getModulePackage().getName();
-            final String childName = child.getModulePackage().getName();
+		final StringBuilder builder = new StringBuilder();
 
-            if (moduleName.startsWith(childName)) {
-                child.addChild(module); // this child can contain
-                rootChild = false; // prevent to add to root
-                break;
-            }
+		appendToString(builder, 0);
 
-        }
+		return builder.toString();
+	}
 
-        if (rootChild) {
-            getChildren().add(module);
-        }
-    }
+	private void appendToString(final StringBuilder builder, final int indent) {
+		final String tab = "  ";
+		builder.append(Strings.repeat(tab, indent));
+		builder.append("+- [" + getAlias() + "]");
+		builder.append("\n");
+		for (final Entry<String, ControllerClass> controller : getControllers().entrySet()) {
+			builder.append(Strings.repeat(tab, indent));
+			builder.append("|- ");
+			builder.append(controller.getKey() + ": " + controller.getValue().getType().getCanonicalName());
+			builder.append("\n");
+		}
 
-    @Override
-    public String toString() {
+		if (!getChildren().isEmpty()) {
+			builder.append(Strings.repeat(tab, indent));
+			for (final Module child : getChildren().values()) {
+				child.appendToString(builder, indent + 1);
+			}
+		}
+	}
 
-        final StringBuilder builder = new StringBuilder();
+	public String getAlias() {
+		return getParent().getAliasOfChild(this);
+	}
 
-        appendToString(builder, 0);
+	/**
+	 *
+	 * @param child
+	 *            child module
+	 * @return alias when the child is contained
+	 */
+	private String getAliasOfChild(final Module child) {
+		for (final Entry<String, Module> entry : getChildren().entrySet()) {
+			if (entry.getValue().equals(child)) {
+				return entry.getKey();
+			}
+		}
+		return null;
+	}
 
-        return builder.toString();
-    }
+	public Module getParent() {
+		return parent;
+	}
 
-    private void appendToString(final StringBuilder builder, final int indent) {
-        builder.append(Strings.repeat("\t", indent));
-        builder.append("[" + alias + "]");
-        builder.append("\n");
-        for (final Entry<String, ControllerClass> controller : getControllers().entrySet()) {
-            builder.append(Strings.repeat("\t", indent));
-            builder.append("|- ");
-            builder.append(controller.getKey() + ": " + controller.getValue().getType().getCanonicalName());
-            builder.append("\n");
-        }
-
-        if (!getChildren().isEmpty()) {
-            builder.append(Strings.repeat("\t", indent));
-            builder.append("|- submodules: \n");
-            for (final Module child : getChildren()) {
-                child.appendToString(builder, indent + 1);
-            }
-        }
-    }
+	private void setParent(final Module parent) {
+		this.parent = parent;
+	}
 
 }

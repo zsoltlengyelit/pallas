@@ -1,6 +1,7 @@
 package io.pallas.core.module;
 
-import java.util.Collection;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Dedicated context for application itself. There is only one
@@ -10,17 +11,26 @@ import java.util.Collection;
  */
 public class ApplicationModule extends Module {
 
-    /**
-     * @param name
-     * @param modulePackage
-     * @param config
-     * @param controllers
-     */
-    public ApplicationModule(final String name, final Collection<Module> children) {
-        super(name, null, null);
-        for (final Module child : children) {
-            addChild(child);
-        }
-    }
+	/** App name. */
+	private final String name;
+
+	/**
+	 * @param name
+	 * @param modulePackage
+	 * @param config
+	 * @param controllers
+	 */
+	public ApplicationModule(final String name, final Map<String, Module> children) {
+		super();
+		this.name = name;
+		for (final Entry<String, Module> child : children.entrySet()) {
+			addChild(child.getKey(), child.getValue());
+		}
+	}
+
+	@Override
+	public String getAlias() {
+		return name;
+	}
 
 }
