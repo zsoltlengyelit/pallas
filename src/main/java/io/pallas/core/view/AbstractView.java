@@ -1,5 +1,7 @@
 package io.pallas.core.view;
 
+import java.util.Map;
+
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
@@ -53,6 +55,12 @@ public abstract class AbstractView implements View {
     @Override
     public AbstractView set(final String name, final Object value) {
         getModel().set(name, value);
+        return this;
+    }
+
+    @Override
+    public View set(final Map<String, Object> model) {
+        getModel().setAll(model);
         return this;
     }
 

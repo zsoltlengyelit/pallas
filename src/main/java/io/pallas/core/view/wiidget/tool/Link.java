@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import com.landasource.wiidget.Tag;
+import com.landasource.wiidget.Wiidget;
 import com.landasource.wiidget.annotation.DefaultField;
 import com.landasource.wiidget.library.html.HtmlTagWiidget;
 import com.landasource.wiidget.parser.resource.ClassWiidgetResource;
@@ -66,16 +67,19 @@ public class Link extends HtmlTagWiidget {
         if (to instanceof List) {
             final List param = (List) to;
 
+            final ClassWiidgetResource classWiidgetResource = (ClassWiidgetResource) param.get(0);
+            final Class<? extends Wiidget> wiidgetClass = classWiidgetResource.getType();
+
             switch (param.size()) {
             case 1:
-                href = builder.of((ClassWiidgetResource) param.get(0));
+                href = builder.of(wiidgetClass);
                 break;
             case 2:
-                href = builder.of((ClassWiidgetResource) param.get(0), (String) param.get(1));
+                href = builder.of(wiidgetClass, (String) param.get(1));
                 break;
 
             case 3:
-                href = builder.of((ClassWiidgetResource) param.get(0), (String) param.get(1), (Map<String, Object>) param.get(2));
+                href = builder.of(wiidgetClass, (String) param.get(1), (Map<String, Object>) param.get(2));
                 break;
             default:
                 throw new IllegalArgumentException("Illegal link: " + param);
@@ -83,7 +87,7 @@ public class Link extends HtmlTagWiidget {
 
         } else if (to instanceof ClassWiidgetResource) {
 
-            final Class<?> wiidgetClass = ((ClassWiidgetResource) to).getWiidgetClass();
+            final Class<?> wiidgetClass = ((ClassWiidgetResource) to).getType();
 
             href = builder.of(wiidgetClass);
 

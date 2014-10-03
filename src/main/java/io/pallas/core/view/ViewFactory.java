@@ -119,7 +119,7 @@ public class ViewFactory {
         String viewPath = viewBasePath + '/' + filePath;
         String realPath = request.getServletContext().getRealPath(viewPath);
 
-        if (!new File(realPath).isFile()) {
+        if (null == realPath || !new File(realPath).isFile()) {
             viewPath = viewBasePath + '/' + filePath + viewFileSuffix;
             realPath = request.getServletContext().getRealPath(viewPath);
         }

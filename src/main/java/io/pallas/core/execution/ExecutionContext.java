@@ -1,6 +1,6 @@
 package io.pallas.core.execution;
 
-import io.pallas.core.cdi.LookupService;
+import io.pallas.core.cdi.CDIBeans;
 import io.pallas.core.controller.ActionNotFoundException;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerFactory;
@@ -25,6 +25,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 
+/**
+ * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
+ */
 @RequestScoped
 @Alternative
 public class ExecutionContext {
@@ -33,7 +36,7 @@ public class ExecutionContext {
     private Logger logger;
 
     @Inject
-    private LookupService lookupService;
+    private CDIBeans cDIBeans;
 
     @Inject
     private ControllerFactory controllerFactory;
@@ -117,7 +120,7 @@ public class ExecutionContext {
 
     private Object handleHttpError(final HttpException serverException, final HttpServletResponse response) {
 
-        final HttpErrorHandler errorHandler = lookupService.lookup(HttpErrorHandler.class);
+        final HttpErrorHandler errorHandler = cDIBeans.lookup(HttpErrorHandler.class);
         return errorHandler.handle(serverException, response);
     }
 

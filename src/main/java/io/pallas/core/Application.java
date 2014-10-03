@@ -1,6 +1,6 @@
 package io.pallas.core;
 
-import io.pallas.core.cdi.LookupService;
+import io.pallas.core.cdi.CDIBeans;
 import io.pallas.core.configuration.Configuration;
 import io.pallas.core.configuration.JsConfiguration;
 
@@ -13,7 +13,7 @@ public class Application {
 
 	/** Lookup service. */
 	@Inject
-	private LookupService lookupService;
+	private CDIBeans cDIBeans;
 
 	/**
 	 * @return name of the application
@@ -23,7 +23,7 @@ public class Application {
 	}
 
 	public Configuration getConfiguration() {
-		return lookupService.lookup(JsConfiguration.class);
+		return cDIBeans.lookup(JsConfiguration.class);
 	}
 
 }

@@ -3,6 +3,8 @@ package io.pallas.core.view.wiidget;
 import io.pallas.core.view.Model;
 import io.pallas.core.view.View;
 
+import java.util.Map;
+
 import javax.inject.Inject;
 
 import com.landasource.wiidget.Renderer;
@@ -50,6 +52,12 @@ public class WiidgetPage extends com.landasource.wiidget.WiidgetView implements 
     @Override
     public View set(final String name, final Object value) {
         getModel().set(name, value);
+        return this;
+    }
+
+    @Override
+    public View set(final Map<String, Object> model) {
+        getModel().setAll(model);
         return this;
     }
 

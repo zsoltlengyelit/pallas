@@ -1,10 +1,13 @@
 package io.pallas.core.controller;
 
+import io.pallas.core.execution.Redirect;
+import io.pallas.core.http.redirect.RedirectBuilder;
 import io.pallas.core.view.Model;
 import io.pallas.core.view.View;
 import io.pallas.core.view.ViewFactory;
 
 import java.io.InputStream;
+import java.util.List;
 
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
@@ -21,8 +24,32 @@ public class BaseController {
     @Inject
     private Instance<ViewFactory> viewFactory;
 
+    @Inject
+    private Instance<RedirectBuilder> redirecBuilder;
+
     protected View view() {
         return viewFactory.get().createFromPath(null);
+    }
+
+    protected Redirect redirect(final String location) {
+        return redirecBuilder.get().to(location);
+    }
+
+    protected Redirect redirect(final Class<?> controller) {
+        ActionReference reference = new ActionReference(new ControllerClass(controller));
+        return redirecBuilder.get().to(reference);
+    }
+
+    protected Redirect redirect(final List<?> location) {
+        return redirecBuilder.get().to(location);
+    }
+
+    protected Redirect redirect(final Object[] location) {
+        return redirecBuilder.get().to(location);
+    }
+
+    protected Redirect redirect(final ActionReference reference) {
+        return redirecBuilder.get().to(reference);
     }
 
     protected View view(final String path) {

@@ -1,6 +1,6 @@
 package io.pallas.core.controller;
 
-import io.pallas.core.cdi.LookupService;
+import io.pallas.core.cdi.CDIBeans;
 import io.pallas.core.execution.PageNotFoundException;
 import io.pallas.core.module.ApplicationModule;
 import io.pallas.core.module.Module;
@@ -26,7 +26,7 @@ public class ControllerFactory {
 
 	/** Dynamic CDI injector. */
 	@Inject
-	private LookupService lookupService;
+	private CDIBeans cDIBeans;
 
 	@Inject
 	private ControllerNameResolver controllerNameResolver;
@@ -216,7 +216,7 @@ public class ControllerFactory {
 	 * @return
 	 */
 	private Object getControllerInstance(final ControllerClass controllerClass) {
-		return lookupService.lookup(controllerClass.getType());
+		return cDIBeans.lookup(controllerClass.getType());
 	}
 
 }

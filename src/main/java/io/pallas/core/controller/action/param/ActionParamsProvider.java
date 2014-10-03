@@ -1,6 +1,6 @@
 package io.pallas.core.controller.action.param;
 
-import io.pallas.core.cdi.LookupService;
+import io.pallas.core.cdi.CDIBeans;
 import io.pallas.core.cdi.PallasCdiExtension;
 
 import java.lang.annotation.Annotation;
@@ -23,7 +23,7 @@ public class ActionParamsProvider {
     private PallasCdiExtension cdiExtension;
 
     @Inject
-    private LookupService lookupService;
+    private CDIBeans cDIBeans;
 
     public Object[] getActionParams(final Class<?>[] types, final Annotation[][] annotations) {
 
@@ -55,7 +55,7 @@ public class ActionParamsProvider {
         final List<ActionParamProducer> producers = new ArrayList<>();
 
         for (final Class<? extends ActionParamProducer> producerClass : actionParamProducers) {
-            final ActionParamProducer producer = lookupService.lookup(producerClass);
+            final ActionParamProducer producer = cDIBeans.lookup(producerClass);
             producers.add(producer);
         }
         return producers;
