@@ -15,44 +15,43 @@ import com.google.common.base.Optional;
  */
 public class ConfigurationProducer {
 
-    @Inject
-    private Configuration configuration;
+	@Inject
+	private Configuration configuration;
 
-    @Produces
-    @Configured(defaultValue = "")
-    public String produceConfiguredProperty(final InjectionPoint injectionPoint) {
+	@Produces
+	@Configured(defaultValue = "")
+	public String produceConfiguredProperty(final InjectionPoint injectionPoint) {
 
-        final String defaultValue = injectionPoint.getAnnotated().getAnnotation(Configured.class).defaultValue();
+		final String defaultValue = injectionPoint.getAnnotated().getAnnotation(Configured.class).defaultValue();
 
-        final AnnotatedField<?> annotatedField = (AnnotatedField<?>) injectionPoint.getAnnotated();
+		final AnnotatedField<?> annotatedField = (AnnotatedField<?>) injectionPoint.getAnnotated();
 
-        final String fielName = annotatedField.getJavaMember().getName();
-        final Component annotation = injectionPoint.getBean().getBeanClass().getAnnotation(Component.class);
+		final String fielName = annotatedField.getJavaMember().getName();
+		final Component annotation = injectionPoint.getBean().getBeanClass().getAnnotation(Component.class);
 
-        if (null != annotation) {
-            final String componentName = annotation.value();
+		if (null != annotation) {
+			final String componentName = annotation.value();
 
-            // dedicated name
-            final String reference = configuration.getString("application.components." + componentName + "." + fielName);
+			// dedicated name
+			final String reference = configuration.getString("application.components." + componentName + "." + fielName);
 
-            return Optional.fromNullable(reference).or(defaultValue);
-        }
+			return Optional.fromNullable(reference).or(defaultValue);
+		}
 
-        return defaultValue;
-    }
+		return defaultValue;
+	}
 
-    @Produces
-    @ConfProperty(name = "")
-    public String produceConfProperty(final InjectionPoint injectionPoint) {
+	@Produces
+	@ConfProperty(name = "")
+	public String produceConfProperty(final InjectionPoint injectionPoint) {
 
-        final ConfProperty confProperty = injectionPoint.getAnnotated().getAnnotation(ConfProperty.class);
-        final String defaultValue = confProperty.defaultValue();
-        final String name = confProperty.name();
+		final ConfProperty confProperty = injectionPoint.getAnnotated().getAnnotation(ConfProperty.class);
+		final String defaultValue = confProperty.defaultValue();
+		final String name = confProperty.name();
 
-        final String reference = configuration.getString(name);
+		final String reference = configuration.getString(name);
 
-        return Optional.fromNullable(reference).or(defaultValue);
-
-    }
+		return Optional.fromNullable(reference).or(defaultValue);
+	}
 
 }

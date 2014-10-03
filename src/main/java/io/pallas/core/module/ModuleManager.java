@@ -7,6 +7,7 @@ import io.pallas.core.cdi.LookupService;
 import io.pallas.core.cdi.PallasCdiExtension;
 import io.pallas.core.configuration.Configuration;
 import io.pallas.core.controller.ControllerClass;
+import io.pallas.core.util.bean.TypeUtil;
 import io.pallas.core.util.collections.Maps;
 
 import java.util.Collections;
@@ -19,7 +20,10 @@ import java.util.TreeMap;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.Alternative;
 import javax.enterprise.inject.Produces;
+import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -31,6 +35,7 @@ import com.landasource.wiidget.util.Strings;
  */
 @ApplicationScoped
 @Startup
+@Alternative
 public class ModuleManager {
 
 	public static final String APPLICATION_MODULES_CONFIG = "application.modules";
@@ -61,6 +66,21 @@ public class ModuleManager {
 
 		final String modulesToString = String.format("Application structure:\n%s", moduleContext);
 		logger.debug(modulesToString);
+	}
+
+	/**
+	 *
+	 * @param ip
+	 *            injection pont
+	 * @return module
+	 */
+	@Produces
+	@Dependent
+	@SuppressWarnings("unchecked")
+	public Module produceModule(final InjectionPoint ip) {
+		final Class<? extends Module> expectedType = (Class<? extends Module>) TypeUtil.resolveExpectedType(ip);
+
+		return findModule(getApplicationModuleContext(), expectedType);
 	}
 
 	/**
@@ -202,4 +222,24 @@ public class ModuleManager {
 			throw new IllegalModuleConfigException("Illegal value: " + String.valueOf(moduleConfig));
 		}
 	}
+
+	private Module findModule(final Module moduleContext, final Class<? extends Module> expectedType) {
+
+		for (final Module child : moduleContext.getChildren().values()) {
+
+			if (expectedType.equals(moduleContext.getClass())) {
+				return child;
+			} else {
+
+				final Module found = findModule(child, expectedType);
+				if (null != found) {
+					return found;
+				}
+
+			}
+		}
+
+		return null;
+	}
+
 }

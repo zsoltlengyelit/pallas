@@ -18,6 +18,9 @@ import javax.enterprise.util.Nonbinding;
 import javax.inject.Qualifier;
 
 /**
+ * Annotation marks an injectable config property where key is resolved by target bean. Controllers and modules, ... can have such properties. Theese components have designed
+ * config path thats why these can be resolved.
+ *
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
 @Qualifier
@@ -27,7 +30,7 @@ import javax.inject.Qualifier;
 @Documented
 public @interface Configured {
 
-    @Nonbinding
-    String defaultValue();
+	@Nonbinding
+	String defaultValue();
 
 }
