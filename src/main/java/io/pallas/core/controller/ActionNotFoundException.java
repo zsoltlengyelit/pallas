@@ -2,6 +2,8 @@ package io.pallas.core.controller;
 
 import io.pallas.core.execution.HttpException;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * Thrown when cannot found controller action for the requested path.
  *
@@ -22,7 +24,7 @@ public class ActionNotFoundException extends HttpException {
 
     @Override
     public int getHttpCode() {
-        return 404;
+        return HttpServletResponse.SC_NOT_FOUND;
     }
 
     @Override

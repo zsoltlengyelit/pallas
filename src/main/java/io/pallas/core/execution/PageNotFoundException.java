@@ -1,5 +1,7 @@
 package io.pallas.core.execution;
 
+import javax.servlet.http.HttpServletResponse;
+
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
@@ -17,7 +19,7 @@ public class PageNotFoundException extends HttpException {
 
     @Override
     public int getHttpCode() {
-        return 404;
+        return HttpServletResponse.SC_NOT_FOUND;
     }
 
     @Override
