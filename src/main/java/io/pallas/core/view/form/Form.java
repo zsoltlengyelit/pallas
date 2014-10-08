@@ -55,13 +55,6 @@ public class Form<T> implements Map<String, String> {
 	/**
 	 * Instantiates a new form that wraps the specified class.
 	 */
-	public static <T> Form<T> from(final T instance) {
-		return new Form<T>((Class<T>) instance.getClass(), instance);
-	}
-
-	/**
-	 * Instantiates a new form that wraps the specified class.
-	 */
 	public static <T> Form<T> from(final String name, final Class<T> clazz) {
 		return new Form<T>(name, clazz);
 	}
@@ -116,10 +109,6 @@ public class Form<T> implements Map<String, String> {
 	 */
 	public Form(final Class<T> clazz) {
 		this(null, clazz);
-	}
-
-	public Form(final Class<T> clazz, final T instance) {
-		this(null, clazz, new HashMap<String, String>(), new HashMap<String, List<ValidationError>>(), Optional.of(instance), null);
 	}
 
 	public Form(final String name, final Class<T> clazz) {
