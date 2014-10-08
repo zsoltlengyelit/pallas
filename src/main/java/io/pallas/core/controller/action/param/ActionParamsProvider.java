@@ -1,6 +1,6 @@
 package io.pallas.core.controller.action.param;
 
-import io.pallas.core.cdi.CDIBeans;
+import io.pallas.core.cdi.CdiBeans;
 import io.pallas.core.cdi.PallasCdiExtension;
 
 import java.lang.annotation.Annotation;
@@ -23,7 +23,7 @@ public class ActionParamsProvider {
     private PallasCdiExtension cdiExtension;
 
     @Inject
-    private CDIBeans cDIBeans;
+    private CdiBeans cDIBeans;
 
     public Object[] getActionParams(final Class<?>[] types, final Annotation[][] annotations) {
 

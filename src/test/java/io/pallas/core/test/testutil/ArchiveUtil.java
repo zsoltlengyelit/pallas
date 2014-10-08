@@ -2,7 +2,7 @@ package io.pallas.core.test.testutil;
 
 import io.pallas.core.Pallas;
 import io.pallas.core.cdi.DeploymentException;
-import io.pallas.core.cdi.CDIBeans;
+import io.pallas.core.cdi.CdiBeans;
 import io.pallas.core.cdi.PallasCdiExtension;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.action.param.ActionParamProducer;
@@ -29,7 +29,7 @@ public class ArchiveUtil {
     public static JavaArchive build(final Class<?>... classes) {
 
         return ShrinkWrap.create(JavaArchive.class, "pallas.jar").addAsResource(EmptyAsset.INSTANCE, "beans.xml").addClasses(classes)
-                .addClasses(LoggerProducer.class, CDIBeans.class);
+                .addClasses(LoggerProducer.class, CdiBeans.class);
 
     }
 

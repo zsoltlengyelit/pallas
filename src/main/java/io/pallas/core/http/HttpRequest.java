@@ -1,6 +1,6 @@
 package io.pallas.core.http;
 
-import io.pallas.core.cdi.CDIBeans;
+import io.pallas.core.cdi.CdiBeans;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class HttpRequest extends HttpServletRequestWrapper {
         final String characterEncoding = getCharacterEncoding();
 
         if (null == characterEncoding) {
-            final String encoding = CDIBeans.of(io.pallas.core.Application.class).getConfiguration().getString("application.encoding");
+            final String encoding = CdiBeans.of(io.pallas.core.Application.class).getConfiguration().getString("application.encoding");
             if (null == encoding) {
                 return Charset.defaultCharset();
             }

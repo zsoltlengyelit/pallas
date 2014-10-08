@@ -3,7 +3,7 @@ package io.pallas.core.module;
 import io.pallas.core.WebApplication;
 import io.pallas.core.annotations.Controller;
 import io.pallas.core.annotations.Startup;
-import io.pallas.core.cdi.CDIBeans;
+import io.pallas.core.cdi.CdiBeans;
 import io.pallas.core.cdi.PallasCdiExtension;
 import io.pallas.core.configuration.Configuration;
 import io.pallas.core.controller.ControllerClass;
@@ -55,7 +55,7 @@ public class ModuleManager {
 	private Logger logger;
 
 	@Inject
-	private CDIBeans cDIBeans;
+	private CdiBeans cDIBeans;
 
 	private ApplicationModule moduleContext;
 

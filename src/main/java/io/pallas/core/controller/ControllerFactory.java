@@ -1,6 +1,6 @@
 package io.pallas.core.controller;
 
-import io.pallas.core.cdi.CDIBeans;
+import io.pallas.core.cdi.CdiBeans;
 import io.pallas.core.execution.PageNotFoundException;
 import io.pallas.core.module.ApplicationModule;
 import io.pallas.core.module.Module;
@@ -26,7 +26,7 @@ public class ControllerFactory {
 
 	/** Dynamic CDI injector. */
 	@Inject
-	private CDIBeans cDIBeans;
+	private CdiBeans cDIBeans;
 
 	@Inject
 	private ControllerNameResolver controllerNameResolver;

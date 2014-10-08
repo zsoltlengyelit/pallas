@@ -16,7 +16,7 @@ import javax.inject.Inject;
  *
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
-public class CDIBeans {
+public class CdiBeans {
 
     /** CDI bean manager. */
     @Inject
@@ -32,7 +32,7 @@ public class CDIBeans {
      * @return the bean instance in the context with qualifier
      */
     public <T> T lookup(final Class<T> type, final Class<? extends Annotation> scope) {
-        return CDIBeans.lookup(beanManager, type, scope);
+        return CdiBeans.lookup(beanManager, type, scope);
     }
 
     /**
@@ -40,7 +40,7 @@ public class CDIBeans {
      * @return
      */
     public <T> T lookup(final Class<T> type) {
-        return CDIBeans.lookup(beanManager, type);
+        return CdiBeans.lookup(beanManager, type);
     }
 
     /**

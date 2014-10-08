@@ -1,6 +1,6 @@
 package io.pallas.core;
 
-import io.pallas.core.cdi.CDIBeans;
+import io.pallas.core.cdi.CdiBeans;
 import io.pallas.core.configuration.Configuration;
 import io.pallas.core.configuration.JsConfiguration;
 
@@ -13,7 +13,7 @@ public class Application {
 
 	/** Lookup service. */
 	@Inject
-	private CDIBeans cDIBeans;
+	private CdiBeans cDIBeans;
 
 	/**
 	 * @return name of the application
