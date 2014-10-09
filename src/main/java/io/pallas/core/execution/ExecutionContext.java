@@ -91,6 +91,9 @@ public class ExecutionContext {
 			}
 
 			handleResult(httpResponse, result);
+		} catch (final Throwable throwable) {
+
+			handleHttpError(new InternalServerErrorException(throwable), httpResponse);
 
 		} finally {
 			request = null;
