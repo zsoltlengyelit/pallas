@@ -18,27 +18,27 @@ import org.apache.log4j.Logger;
  */
 public class DefaultHttpErrorHandler extends BaseController implements HttpErrorHandler {
 
-	@Inject
-	private Logger logger;
+    @Inject
+    private Logger logger;
 
-	@Override
-	public View handle(final HttpException error, final HttpServletResponse response) {
+    @Override
+    public View handle(final HttpException error, final HttpServletResponse response) {
 
-		logger.error(error.getLocalizedMessage(), error);
+        logger.error(error.getLocalizedMessage(), error);
 
-		response.setStatus(error.getHttpCode());
+        response.setStatus(error.getHttpCode());
 
-		return getErrorView(error);
-	}
+        return getErrorView(error);
+    }
 
-	protected View getErrorView(final HttpException error) {
-		InputStream stream;
-		if (Pallas.getRunMode().equals(RunMode.DEVELOPMENT)) {
-			stream = getClass().getResourceAsStream("error404-dev.wdgt");
-		} else {
-			stream = getClass().getResourceAsStream("error404.wdgt");
-		}
+    protected View getErrorView(final HttpException error) {
+        InputStream stream;
+        if (Pallas.getRunMode().equals(RunMode.DEVELOPMENT)) {
+            stream = getClass().getResourceAsStream("error404-dev.wdgt");
+        } else {
+            stream = getClass().getResourceAsStream("error404.wdgt");
+        }
 
-		return view(stream).set("exception", error);
-	}
+        return view(stream).set("exception", error);
+    }
 }

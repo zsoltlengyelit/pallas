@@ -3,6 +3,7 @@ package io.pallas.core.module;
 import io.pallas.core.cdi.DeploymentException;
 import io.pallas.core.controller.ControllerClass;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -178,6 +179,19 @@ public abstract class Module {
             }
         }
 
+        return null;
+    }
+
+    public ControllerClass getDefaultControllerClass() {
+        final Collection<ControllerClass> controllerClasses = getControllers().values();
+        for (final ControllerClass controllerClass : controllerClasses) {
+
+            final String name = controllerClass.getName();
+
+            if ("".equals(name) || "/".equals(name)) {
+                return controllerClass;
+            }
+        }
         return null;
     }
 

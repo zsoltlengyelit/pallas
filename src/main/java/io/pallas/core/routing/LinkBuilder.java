@@ -1,10 +1,10 @@
 package io.pallas.core.routing;
 
+import io.pallas.core.WebApplication;
 import io.pallas.core.configuration.Configuration;
 import io.pallas.core.controller.ActionReference;
 import io.pallas.core.controller.ControllerClass;
 import io.pallas.core.controller.ControllerNameResolver;
-import io.pallas.core.module.ApplicationModule;
 import io.pallas.core.module.Module;
 
 import java.util.ArrayList;
@@ -31,15 +31,15 @@ public class LinkBuilder {
     private final ControllerNameResolver controllerNameResolver;
     private final Configuration configuration;
     private final HttpServletRequest request;
-    private final ApplicationModule applicationModule;
+    private final WebApplication application;
 
     @Inject
-    public LinkBuilder(final HttpServletRequest request, final HttpServletResponse response, final ControllerNameResolver controllerNameResolver,
-            final ApplicationModule applicationModule, final Configuration configuration) {
+    public LinkBuilder(final HttpServletRequest request, final HttpServletResponse response, final ControllerNameResolver controllerNameResolver, final WebApplication application,
+            final Configuration configuration) {
         this.request = request;
         this.response = response;
         this.controllerNameResolver = controllerNameResolver;
-        this.applicationModule = applicationModule;
+        this.application = application;
         this.configuration = configuration;
     }
 
@@ -69,7 +69,7 @@ public class LinkBuilder {
     private String getModulePrefix(final Class<?> controller) {
         final ControllerClass controllerClass = new ControllerClass(controller);
 
-        final Module module = applicationModule.getParentModule(controllerClass);
+        final Module module = application.getParentModule(controllerClass);
         final Stack<String> moduleAliases = new Stack<>();
 
         Module parent = module;
@@ -89,13 +89,16 @@ public class LinkBuilder {
      * @return
      */
     public String of(final Class<?> controller, final String action, final Map<String, Object> params) {
+        final String modulePrefix = getModulePrefix(controller);
 
         final String controllerName = getControllerName(controller);
 
         final StringBuilder urlBuilder = new StringBuilder();
 
-        urlBuilder.append("/");
-
+        if (!"/".equals(modulePrefix)) {
+            urlBuilder.append("/");
+        }
+        urlBuilder.append(modulePrefix);
         urlBuilder.append(controllerName);
         urlBuilder.append("/");
         urlBuilder.append(action);

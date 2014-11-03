@@ -1,5 +1,7 @@
 package io.pallas.core;
 
+import io.pallas.core.module.Application;
+
 
 /**
  * Base web application.

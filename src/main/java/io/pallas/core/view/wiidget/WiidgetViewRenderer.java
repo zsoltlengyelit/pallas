@@ -38,7 +38,7 @@ public class WiidgetViewRenderer implements ViewRenderer {
     private Instance<Engine> engineInstance;
 
     @Inject
-    @ConfProperty(name = "application.encoding", defaultValue = "ISO 8859-2")
+    @ConfProperty(name = "application.encoding", defaultValue = "UTF-8")
     private String encoding;
 
     @Override

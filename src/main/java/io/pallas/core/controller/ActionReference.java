@@ -36,6 +36,10 @@ public class ActionReference {
         return new ActionReference(new ControllerClass(controller));
     }
 
+    public static ActionReference of(final ControllerClass controllerClass, final String actionName) {
+        return new ActionReference(controllerClass, actionName);
+    }
+
     /**
      * @param reference
      *            any value TODO comment

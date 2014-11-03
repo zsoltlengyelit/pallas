@@ -3,6 +3,5 @@
 	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://jboss.org/schema/cdi/beans_1_0.xsd">
 	<alternatives>
 		<class>io.pallas.core.execution.ExecutionContext</class>		
-		<class>io.pallas.core.module.ModuleManager</class>
 	</alternatives>	
 </beans>

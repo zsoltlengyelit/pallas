@@ -39,7 +39,7 @@ public class HttpRequest extends HttpServletRequestWrapper {
         final String characterEncoding = getCharacterEncoding();
 
         if (null == characterEncoding) {
-            final String encoding = CdiBeans.of(io.pallas.core.Application.class).getConfiguration().getString("application.encoding");
+            final String encoding = CdiBeans.of(io.pallas.core.module.Application.class).getConfiguration().getString("application.encoding");
             if (null == encoding) {
                 return Charset.defaultCharset();
             }

@@ -2,6 +2,7 @@ package io.pallas.core.controller;
 
 import io.pallas.core.execution.Redirect;
 import io.pallas.core.http.redirect.RedirectBuilder;
+import io.pallas.core.module.Application;
 import io.pallas.core.view.Model;
 import io.pallas.core.view.View;
 import io.pallas.core.view.ViewFactory;
@@ -27,8 +28,17 @@ public class BaseController {
     @Inject
     private Instance<RedirectBuilder> redirecBuilder;
 
+    @Inject
+    private Instance<Application> applicationModule;
+
     protected View view() {
         return viewFactory.get().createFromPath(null);
+    }
+
+    protected Redirect redirectHome() {
+        final ControllerClass defaultControllerClass = applicationModule.get().getDefaultControllerClass();
+        final ActionReference homeReference = ActionReference.of(defaultControllerClass, defaultControllerClass.getDefaultAction().getName());
+        return redirecBuilder.get().to(homeReference);
     }
 
     protected Redirect redirect(final String location) {
@@ -36,7 +46,7 @@ public class BaseController {
     }
 
     protected Redirect redirect(final Class<?> controller) {
-        ActionReference reference = new ActionReference(new ControllerClass(controller));
+        final ActionReference reference = new ActionReference(new ControllerClass(controller));
         return redirecBuilder.get().to(reference);
     }
 

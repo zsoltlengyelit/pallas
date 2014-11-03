@@ -12,8 +12,8 @@ public class PageNotFoundException extends HttpException {
      */
     private static final long serialVersionUID = -7423926906022268946L;
 
-    public PageNotFoundException() {
-        super("Page not found");
+    public PageNotFoundException(final String path) {
+        super("Page not found: '" + path + "'");
 
     }
 
@@ -24,6 +24,6 @@ public class PageNotFoundException extends HttpException {
 
     @Override
     public String getHttpMessage() {
-        return "Page not found";
+        return getMessage();
     }
 }
