@@ -6,16 +6,19 @@ import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
 import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
 import static org.jboss.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
 import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import io.pallas.core.ws.events.OpenEvent;
+import io.pallas.core.ws.events.AbstractWsEvent;
+import io.pallas.core.ws.events.OnClose;
+import io.pallas.core.ws.events.OnError;
+import io.pallas.core.ws.events.OnMessage;
+import io.pallas.core.ws.events.OnOpen;
 import io.pallas.core.ws.events.WebSocketLiteral;
 
-import javax.enterprise.event.Event;
-import javax.enterprise.inject.Any;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
 import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -42,14 +45,13 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
     @Inject
     private Logger logger;
 
-    private WebSocketServerHandshaker handshaker;
-
     @Inject
     private BeanManager beanManager;
 
+    private WebSocketServerHandshaker handshaker;
+
     @Inject
-    @Any
-    private Event<OpenEvent> openEvent;
+    private UrlMapperGroup group;
 
     @Override
     public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
@@ -84,12 +86,16 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
     private void handleWebSocketFrame(final ChannelHandlerContext ctx, final WebSocketFrame frame) {
 
         // Check for closing frame
+        final Channel channel = ctx.getChannel();
         if (frame instanceof CloseWebSocketFrame) {
-            handshaker.close(ctx.getChannel(), (CloseWebSocketFrame) frame);
+            handshaker.close(channel, (CloseWebSocketFrame) frame);
+            // fire open event
+            final OnClose event = new OnClose(createWsChannel(channel));
+            sendMessage(event);
             return;
         }
         if (frame instanceof PingWebSocketFrame) {
-            ctx.getChannel().write(new PongWebSocketFrame(frame.getBinaryData()));
+            channel.write(new PongWebSocketFrame(frame.getBinaryData()));
             return;
         }
         if (!(frame instanceof TextWebSocketFrame)) {
@@ -99,9 +105,14 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
         // Send the uppercase string back.
         final String request = ((TextWebSocketFrame) frame).getText();
         if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Channel %s received %s", ctx.getChannel().getId(), request));
+            logger.debug(String.format("Channel %s received %s", channel.getId(), request));
         }
-        ctx.getChannel().write(new TextWebSocketFrame(request.toUpperCase()));
+
+        // fire open event
+        final OnMessage event = new OnMessage(request, createWsChannel(channel));
+        sendMessage(event);
+
+        //ctx.getChannel().write(new TextWebSocketFrame(request.toUpperCase()));
     }
 
     private static void sendHttpResponse(final ChannelHandlerContext ctx, final HttpRequest req, final HttpResponse res) {
@@ -120,12 +131,22 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
 
     @Override
     public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e) throws Exception {
-        e.getCause().printStackTrace();
+        final OnError error = new OnError(e.getCause(), createWsChannel(ctx.getChannel()));
+        sendMessage(error);
+        // TODO strategy
         e.getChannel().close();
     }
 
     private String getWebSocketLocation(final HttpRequest req) {
         return "ws://" + req.headers().get(HOST);
+    }
+
+    private WebSocketLiteral createWebsocketLiteral(final Channel channel) {
+        return new WebSocketLiteral(group.getUrl(channel));
+    }
+
+    private WsChannel createWsChannel(final Channel channel) {
+        return new WsChannel(channel);
     }
 
     private class OpenChannelListener implements ChannelFutureListener {
@@ -140,13 +161,17 @@ public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
         public void operationComplete(final ChannelFuture future) throws Exception {
             if (future.isSuccess()) {
 
-                final WsChannel wsChannel = new WsChannel(future.getChannel());
-                final OpenEvent event = new OpenEvent(wsChannel);
+                group.put(uri, future.getChannel());
 
-                openEvent.select(new WebSocketLiteral(uri)).fire(event);
+                final OnOpen event = new OnOpen(createWsChannel(future.getChannel()));
+                sendMessage(event);
 
             }
         }
-
     }
+
+    private void sendMessage(final AbstractWsEvent event) {
+        beanManager.fireEvent(event, createWebsocketLiteral(event.getChannel().getChannel()));
+    }
+
 }

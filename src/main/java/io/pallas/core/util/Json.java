@@ -80,6 +80,15 @@ public class Json {
     }
 
     /**
+     * @param data
+     *            value to concert to Json text
+     * @return Json text
+     */
+    public String toJsonText(final Object data) {
+        return stringify(toJson(data));
+    }
+
+    /**
      * Convert a JsonNode to a Java value
      *
      * @param json

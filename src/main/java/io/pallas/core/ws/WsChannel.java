@@ -21,4 +21,8 @@ public class WsChannel {
     public void write(final String string) {
         channel.write(new TextWebSocketFrame(string));
     }
+
+    Channel getChannel() {
+        return channel;
+    }
 }

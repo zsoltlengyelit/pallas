@@ -2,16 +2,14 @@ package io.pallas.core.ws.events;
 
 import io.pallas.core.ws.WsChannel;
 
-import java.io.Serializable;
-
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
-public class OpenEvent implements Serializable {
+public class AbstractWsEvent {
 
     private final WsChannel channel;
 
-    public OpenEvent(final WsChannel channel) {
+    public AbstractWsEvent(final WsChannel channel) {
         this.channel = channel;
     }
 
@@ -21,5 +19,4 @@ public class OpenEvent implements Serializable {
     public WsChannel getChannel() {
         return channel;
     }
-
 }

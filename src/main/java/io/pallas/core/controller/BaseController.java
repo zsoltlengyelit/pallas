@@ -1,6 +1,8 @@
 package io.pallas.core.controller;
 
+import io.pallas.core.controller.response.JsonResponse;
 import io.pallas.core.execution.Redirect;
+import io.pallas.core.execution.Result;
 import io.pallas.core.http.redirect.RedirectBuilder;
 import io.pallas.core.module.Application;
 import io.pallas.core.view.Model;
@@ -30,6 +32,10 @@ public class BaseController {
 
     @Inject
     private Instance<Application> applicationModule;
+
+    protected Result json(final Object data) {
+        return new JsonResponse(data);
+    }
 
     protected View view() {
         return viewFactory.get().createFromPath(null);
