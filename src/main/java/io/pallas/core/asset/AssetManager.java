@@ -16,7 +16,6 @@ import java.util.zip.CRC32;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.servlet.ServletContext;
 
 /**
  * Responsible to put files to configured path.
@@ -27,120 +26,120 @@ import javax.servlet.ServletContext;
 @Component(AssetManager.COMPONENT_NAME)
 public class AssetManager {
 
-    public static final String COMPONENT_NAME = "assetManager";
+	public static final String COMPONENT_NAME = "assetManager";
 
-    public static final String DEFAULT_URL_PATH = "/assets";
+	public static final String DEFAULT_URL_PATH = "/assets";
 
-    private final Map<String, String> assetContents = new HashMap<>(); // this contents must be served as content
-    private final Map<String, String> assetFiles = new HashMap<>();
-    private final Map<String, String> mimeTypes = new HashMap<>(); // assetKey -> mime type(content type)
+	private final Map<String, String> assetContents = new HashMap<>(); // this contents must be served as content
+	private final Map<String, String> assetFiles = new HashMap<>();
+	private final Map<String, String> mimeTypes = new HashMap<>(); // assetKey -> mime type(content type)
 
-    @Inject
-    private ServletContext servletContext;
+	//    @Inject
+	//    private ServletContext servletContext;
 
-    @Inject
-    @Configured(defaultValue = DEFAULT_URL_PATH)
-    private String urlPath;
+	@Inject
+	@Configured(defaultValue = DEFAULT_URL_PATH)
+	private String urlPath;
 
-    /**
-     * Published file where path is defined relative to deployment path
-     *
-     * @param relativePath
-     * @param contentType
-     * @return
-     */
-    public String publishRelativeContextFile(final String relativePath, final String contentType) {
-        final String realPath = servletContext.getRealPath(relativePath);
-        if (null == realPath) {
-            throw new InternalServerErrorException(String.format("File does not exists: %s", relativePath));
-        }
-        return publishRelative(new File(realPath), contentType);
-    }
+	/**
+	 * Published file where path is defined relative to deployment path
+	 *
+	 * @param relativePath
+	 * @param contentType
+	 * @return
+	 */
+	public String publishRelativeContextFile(final String relativePath, final String contentType) {
+		final String realPath = relativePath;//servletContext.getRealPath(relativePath);
+		if (null == realPath) {
+			throw new InternalServerErrorException(String.format("File does not exists: %s", relativePath));
+		}
+		return publishRelative(new File(realPath), contentType);
+	}
 
-    /**
-     * @param inlineContent
-     * @return
-     */
-    public String publishRelativeContent(final InlineAssetContent inlineContent) {
+	/**
+	 * @param inlineContent
+	 * @return
+	 */
+	public String publishRelativeContent(final InlineAssetContent inlineContent) {
 
-        final String parentHash = hashParent(inlineContent.getParent());
+		final String parentHash = hashParent(inlineContent.getParent());
 
-        final String assetName = parentHash + "/" + inlineContent.getName();
-        assetContents.put(assetName, inlineContent.getContent());
-        mimeTypes.put(assetName, inlineContent.getContentType());
+		final String assetName = parentHash + "/" + inlineContent.getName();
+		assetContents.put(assetName, inlineContent.getContent());
+		mimeTypes.put(assetName, inlineContent.getContentType());
 
-        return generateRelativePath(assetName);
-    }
+		return generateRelativePath(assetName);
+	}
 
-    /**
-     * @param internalFile
-     *            file to publish
-     * @param contentType
-     * @return the published file relative path in URL (of context)
-     */
-    public String publishRelative(final File internalFile, final String contentType) {
+	/**
+	 * @param internalFile
+	 *            file to publish
+	 * @param contentType
+	 * @return the published file relative path in URL (of context)
+	 */
+	public String publishRelative(final File internalFile, final String contentType) {
 
-        final String parentHash = hashParent(internalFile.getParent());
-        final String name = internalFile.getName();
+		final String parentHash = hashParent(internalFile.getParent());
+		final String name = internalFile.getName();
 
-        final String assetName = parentHash + "/" + name;
-        assetFiles.put(assetName, internalFile.getAbsolutePath());
-        mimeTypes.put(assetName, contentType);
+		final String assetName = parentHash + "/" + name;
+		assetFiles.put(assetName, internalFile.getAbsolutePath());
+		mimeTypes.put(assetName, contentType);
 
-        return generateRelativePath(assetName);
-    }
+		return generateRelativePath(assetName);
+	}
 
-    private String generateRelativePath(final String assetName) {
-        return servletContext.getContextPath() + urlPath + "/" + assetName;
-    }
+	private String generateRelativePath(final String assetName) {
+		return /* TODO servletContext.getContextPath() + */urlPath + "/" + assetName;
+	}
 
-    /**
-     * @param assetUrl
-     * @return the file when set, otherwise null
-     */
-    public Asset getAsset(final String assetKey) {
-        InputStream stream = null;
+	/**
+	 * @param assetUrl
+	 * @return the file when set, otherwise null
+	 */
+	public Asset getAsset(final String assetKey) {
+		InputStream stream = null;
 
-        final String absolutePath = assetFiles.get(assetKey);
+		final String absolutePath = assetFiles.get(assetKey);
 
-        if (null == absolutePath) {
-            final String content = assetContents.get(assetKey);
-            if (null == content) {
-                return null;
-            } else {
-                stream = new ByteArrayInputStream(content.getBytes());
-            }
-        } else {
+		if (null == absolutePath) {
+			final String content = assetContents.get(assetKey);
+			if (null == content) {
+				return null;
+			} else {
+				stream = new ByteArrayInputStream(content.getBytes());
+			}
+		} else {
 
-            // handle file
-            try {
-                stream = new FileInputStream(absolutePath);
-            } catch (FileNotFoundException | NullPointerException e) {
-                return null;
-            }
-        }
+			// handle file
+			try {
+				stream = new FileInputStream(absolutePath);
+			} catch (FileNotFoundException | NullPointerException e) {
+				return null;
+			}
+		}
 
-        return new Asset(stream, mimeTypes.get(assetKey));
-    }
+		return new Asset(stream, mimeTypes.get(assetKey));
+	}
 
-    protected String hashParent(final String internalParentName) {
+	protected String hashParent(final String internalParentName) {
 
-        final CRC32 crc32 = new CRC32();
-        final byte[] bytes = internalParentName.getBytes();
-        crc32.update(bytes, 0, bytes.length);
+		final CRC32 crc32 = new CRC32();
+		final byte[] bytes = internalParentName.getBytes();
+		crc32.update(bytes, 0, bytes.length);
 
-        try {
-            return new Hashids().encrypt(crc32.getValue());
-        } catch (final Exception e) {
-            throw new InternalServerErrorException(e);
-        }
-    }
+		try {
+			return new Hashids().encrypt(crc32.getValue());
+		} catch (final Exception e) {
+			throw new InternalServerErrorException(e);
+		}
+	}
 
-    /**
-     * @return the urlPath
-     */
-    public String getUrlPath() {
-        return urlPath;
-    }
+	/**
+	 * @return the urlPath
+	 */
+	public String getUrlPath() {
+		return urlPath;
+	}
 
 }

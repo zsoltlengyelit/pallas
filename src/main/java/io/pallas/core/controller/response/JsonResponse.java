@@ -6,30 +6,31 @@ import io.pallas.core.util.Json;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
+
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.handler.codec.http.HttpResponse;
 
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
 public class JsonResponse implements Response {
 
-    private final Object data;
+	private final Object data;
 
-    public JsonResponse(final Object data) {
-        this.data = data;
-    }
+	public JsonResponse(final Object data) {
+		this.data = data;
+	}
 
-    @Override
-    public void render(final HttpServletResponse response) {
-        response.setContentType(MediaType.APPLICATION_JSON);
-        final String content = Json.create().toJsonText(data);
-        try {
-            response.getWriter().append(content);
-        } catch (final IOException exception) {
-            throw new InternalServerErrorException(exception);
-        }
+	@Override
+	public void render(final HttpResponse response) {
+		response.headers().set(HttpHeaders.Names.CONTENT_TYPE, MediaType.APPLICATION_JSON);
+		final String content = Json.create().toJsonText(data);
 
-    }
+		// TODO encoding
+		response.setContent(ChannelBuffers.copiedBuffer(content.getBytes()));
+
+	}
 
 }

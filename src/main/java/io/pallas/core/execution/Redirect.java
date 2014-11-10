@@ -1,32 +1,31 @@
 package io.pallas.core.execution;
 
-import java.io.IOException;
-
-import javax.servlet.http.HttpServletResponse;
+import org.jboss.netty.handler.codec.http.HttpHeaders;
+import org.jboss.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 
 /**
  * @author lzsolt
  */
 public class Redirect implements Response {
 
-    private final String location;
+	private final String location;
 
-    /**
-     * @param location
-     *            location to redirect
-     */
-    public Redirect(final String location) {
-        super();
-        this.location = location;
-    }
+	/**
+	 * @param location
+	 *            location to redirect
+	 */
+	public Redirect(final String location) {
+		super();
+		this.location = location;
+	}
 
-    @Override
-    public void render(final HttpServletResponse response) {
-        try {
-            response.sendRedirect(location);
-        } catch (final IOException e) {
-            throw new InternalServerErrorException(e);
-        }
-    }
+	@Override
+	public void render(final HttpResponse response) {
+
+		response.setStatus(HttpResponseStatus.FOUND);
+		response.headers().add(HttpHeaders.Names.LOCATION, location);
+
+	}
 
 }

@@ -2,7 +2,7 @@ package io.pallas.core.controller;
 
 import io.pallas.core.execution.HttpException;
 
-import javax.servlet.http.HttpServletResponse;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 
 /**
  * Thrown when cannot found controller action for the requested path.
@@ -11,32 +11,32 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class ActionNotFoundException extends HttpException {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -4487626615647918596L;
-    private final String pathInfo;
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = -4487626615647918596L;
+	private final String pathInfo;
 
-    public ActionNotFoundException(final String pathInfo) {
-        super("Cannot found action for: " + pathInfo);
-        this.pathInfo = pathInfo;
-    }
+	public ActionNotFoundException(final String pathInfo) {
+		super("Cannot found action for: " + pathInfo);
+		this.pathInfo = pathInfo;
+	}
 
-    @Override
-    public int getHttpCode() {
-        return HttpServletResponse.SC_NOT_FOUND;
-    }
+	@Override
+	public int getHttpCode() {
+		return HttpResponseStatus.NOT_FOUND.getCode();
+	}
 
-    @Override
-    public String getHttpMessage() {
-        return getMessage();
-    }
+	@Override
+	public String getHttpMessage() {
+		return getMessage();
+	}
 
-    /**
-     * @return the pathInfo
-     */
-    public String getPathInfo() {
-        return pathInfo;
-    }
+	/**
+	 * @return the pathInfo
+	 */
+	public String getPathInfo() {
+		return pathInfo;
+	}
 
 }

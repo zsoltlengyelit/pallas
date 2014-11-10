@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.servlet.ServletContext;
 import javax.ws.rs.QueryParam;
 
 /**
@@ -17,50 +16,52 @@ import javax.ws.rs.QueryParam;
 @Controller("asset")
 public class AssetController {
 
-    @Inject
-    private AssetManager assetManager;
-    @Inject
-    private ServletContext context;
+	@Inject
+	private AssetManager assetManager;
 
-    /**
-     * @param assetKey
-     * @return
-     */
-    public AssetResponse serve(@QueryParam("file") final String assetKey) {
+	//	@Inject
+	//	private ServletContext context;
 
-        final Asset asset = assetManager.getAsset(assetKey);
+	/**
+	 * @param assetKey
+	 * @return
+	 */
+	public AssetResponse serve(@QueryParam("file") final String assetKey) {
 
-        if (null == asset) {
-            return AssetResponse.notFoundAsset();
-        }
+		final Asset asset = assetManager.getAsset(assetKey);
 
-        return new AssetResponse(asset);
-    }
+		if (null == asset) {
+			return AssetResponse.notFoundAsset();
+		}
 
-    public AssetResponse serveStatic(@QueryParam("file") final String file) {
+		return new AssetResponse(asset);
+	}
 
-        try {
-            final String realPath = context.getRealPath("/" + file);
+	public AssetResponse serveStatic(@QueryParam("file") final String file) {
 
-            final String contentType = calculateContentType(file);
+		try {
+			// TODO
+			final String realPath = file;//context.getRealPath("/" + file);
 
-            return new AssetResponse(new Asset(new FileInputStream(realPath), contentType));
-        } catch (final FileNotFoundException | NullPointerException e) {
-            return AssetResponse.notFoundAsset();
-        }
-    }
+			final String contentType = calculateContentType(file);
 
-    private String calculateContentType(final String file) {
+			return new AssetResponse(new Asset(new FileInputStream(realPath), contentType));
+		} catch (final FileNotFoundException | NullPointerException e) {
+			return AssetResponse.notFoundAsset();
+		}
+	}
 
-        final String[] parts = file.split("\\.");
-        final String ext = parts[parts.length - 1];
+	private String calculateContentType(final String file) {
 
-        final Map<String, String> mimeMap = new HashMap<String, String>();
+		final String[] parts = file.split("\\.");
+		final String ext = parts[parts.length - 1];
 
-        mimeMap.put("js", "application/javascript");
-        mimeMap.put("css", "text/css");
+		final Map<String, String> mimeMap = new HashMap<String, String>();
 
-        final String mime = mimeMap.get(ext);
-        return mime == null ? "text/plain" : mime;
-    }
+		mimeMap.put("js", "application/javascript");
+		mimeMap.put("css", "text/css");
+
+		final String mime = mimeMap.get(ext);
+		return mime == null ? "text/plain" : mime;
+	}
 }

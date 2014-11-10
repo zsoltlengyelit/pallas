@@ -1,6 +1,6 @@
 package io.pallas.core.execution;
 
-import javax.servlet.http.HttpServletResponse;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 
 /**
  *
@@ -25,7 +25,7 @@ public class InternalServerErrorException extends HttpException {
 
 	@Override
 	public int getHttpCode() {
-		return HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+		return HttpResponseStatus.INTERNAL_SERVER_ERROR.getCode();
 	}
 
 	@Override
