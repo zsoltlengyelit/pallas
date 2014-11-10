@@ -3,9 +3,7 @@ package io.pallas.core.ws;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.isKeepAlive;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.setContentLength;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.HOST;
-import static org.jboss.netty.handler.codec.http.HttpMethod.GET;
-import static org.jboss.netty.handler.codec.http.HttpResponseStatus.FORBIDDEN;
-import static org.jboss.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import io.pallas.core.execution.ExecutionContext;
 import io.pallas.core.ws.events.AbstractWsEvent;
 import io.pallas.core.ws.events.OnClose;
 import io.pallas.core.ws.events.OnError;
@@ -13,6 +11,7 @@ import io.pallas.core.ws.events.OnMessage;
 import io.pallas.core.ws.events.OnOpen;
 import io.pallas.core.ws.events.WebSocketLiteral;
 
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
@@ -28,6 +27,7 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.handler.codec.http.DefaultHttpResponse;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 import org.jboss.netty.handler.codec.http.HttpResponse;
+import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.jboss.netty.handler.codec.http.websocketx.CloseWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PingWebSocketFrame;
 import org.jboss.netty.handler.codec.http.websocketx.PongWebSocketFrame;
@@ -42,136 +42,146 @@ import org.jboss.netty.util.CharsetUtil;
  */
 public class WebSocketServerHandler extends SimpleChannelUpstreamHandler {
 
-    @Inject
-    private Logger logger;
+	@Inject
+	private Logger logger;
 
-    @Inject
-    private BeanManager beanManager;
+	@Inject
+	private BeanManager beanManager;
 
-    private WebSocketServerHandshaker handshaker;
+	private WebSocketServerHandshaker handshaker;
 
-    @Inject
-    private UrlMapperGroup group;
+	@Inject
+	private Instance<ExecutionContext> executionContext;
 
-    @Override
-    public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
-        final Object msg = e.getMessage();
-        if (msg instanceof HttpRequest) {
-            handleHttpRequest(ctx, (HttpRequest) msg);
-        } else if (msg instanceof WebSocketFrame) {
-            handleWebSocketFrame(ctx, (WebSocketFrame) msg);
-        }
-    }
+	@Inject
+	private UrlMapperGroup group;
 
-    private void handleHttpRequest(final ChannelHandlerContext ctx, final HttpRequest req) throws Exception {
-        // Allow only GET methods.
-        if (req.getMethod() != GET) {
-            sendHttpResponse(ctx, req, new DefaultHttpResponse(HTTP_1_1, FORBIDDEN));
-            return;
-        }
+	@Override
+	public void messageReceived(final ChannelHandlerContext ctx, final MessageEvent e) throws Exception {
+		final Object msg = e.getMessage();
+		if (msg instanceof HttpRequest) {
+			handleHttpRequest(ctx, (HttpRequest) msg);
+		} else if (msg instanceof WebSocketFrame) {
+			handleWebSocketFrame(ctx, (WebSocketFrame) msg);
+		}
+	}
 
-        // Handshake
-        final WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(req), null, false);
-        handshaker = wsFactory.newHandshaker(req);
-        if (handshaker == null) {
-            wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
-        } else {
-            final ChannelFuture handshake = handshaker.handshake(ctx.getChannel(), req);
+	private void handleHttpRequest(final ChannelHandlerContext ctx, final HttpRequest req) throws Exception {
+		// TODO
+		// Allow only GET methods.
+		//        if (req.getMethod() != GET) {
+		//            sendHttpResponse(ctx, req, new DefaultHttpResponse(HTTP_1_1, FORBIDDEN));
+		//            return;
+		//        }
 
-            handshake.addListener(new OpenChannelListener(req.getUri()));
-            handshake.addListener(WebSocketServerHandshaker.HANDSHAKE_LISTENER);
-        }
-    }
+		sendHttpResponse(ctx, req);
 
-    private void handleWebSocketFrame(final ChannelHandlerContext ctx, final WebSocketFrame frame) {
+		// Handshake
+		final WebSocketServerHandshakerFactory wsFactory = new WebSocketServerHandshakerFactory(getWebSocketLocation(req), null, false);
+		handshaker = wsFactory.newHandshaker(req);
+		if (handshaker == null) {
+			wsFactory.sendUnsupportedWebSocketVersionResponse(ctx.getChannel());
+		} else {
+			final ChannelFuture handshake = handshaker.handshake(ctx.getChannel(), req);
 
-        // Check for closing frame
-        final Channel channel = ctx.getChannel();
-        if (frame instanceof CloseWebSocketFrame) {
-            handshaker.close(channel, (CloseWebSocketFrame) frame);
-            // fire open event
-            final OnClose event = new OnClose(createWsChannel(channel));
-            sendMessage(event);
-            return;
-        }
-        if (frame instanceof PingWebSocketFrame) {
-            channel.write(new PongWebSocketFrame(frame.getBinaryData()));
-            return;
-        }
-        if (!(frame instanceof TextWebSocketFrame)) {
-            throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
-        }
+			handshake.addListener(new OpenChannelListener(req.getUri()));
+			handshake.addListener(WebSocketServerHandshaker.HANDSHAKE_LISTENER);
+		}
+	}
 
-        // Send the uppercase string back.
-        final String request = ((TextWebSocketFrame) frame).getText();
-        if (logger.isDebugEnabled()) {
-            logger.debug(String.format("Channel %s received %s", channel.getId(), request));
-        }
+	private void sendHttpResponse(final ChannelHandlerContext ctx, final HttpRequest req) {
+		executionContext.get().execute(req, new DefaultHttpResponse(HttpVersion.HTTP_1_1, null));
+	}
 
-        // fire open event
-        final OnMessage event = new OnMessage(request, createWsChannel(channel));
-        sendMessage(event);
+	private void handleWebSocketFrame(final ChannelHandlerContext ctx, final WebSocketFrame frame) {
 
-        //ctx.getChannel().write(new TextWebSocketFrame(request.toUpperCase()));
-    }
+		// Check for closing frame
+		final Channel channel = ctx.getChannel();
+		if (frame instanceof CloseWebSocketFrame) {
+			handshaker.close(channel, (CloseWebSocketFrame) frame);
+			// fire open event
+			final OnClose event = new OnClose(createWsChannel(channel));
+			sendMessage(event);
+			return;
+		}
+		if (frame instanceof PingWebSocketFrame) {
+			channel.write(new PongWebSocketFrame(frame.getBinaryData()));
+			return;
+		}
+		if (!(frame instanceof TextWebSocketFrame)) {
+			throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
+		}
 
-    private static void sendHttpResponse(final ChannelHandlerContext ctx, final HttpRequest req, final HttpResponse res) {
-        // Generate an error page if response status code is not OK (200).
-        if (res.getStatus().getCode() != 200) {
-            res.setContent(ChannelBuffers.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
-            setContentLength(res, res.getContent().readableBytes());
-        }
+		// Send the uppercase string back.
+		final String request = ((TextWebSocketFrame) frame).getText();
+		if (logger.isDebugEnabled()) {
+			logger.debug(String.format("Channel %s received %s", channel.getId(), request));
+		}
 
-        // Send the response and close the connection if necessary.
-        final ChannelFuture f = ctx.getChannel().write(res);
-        if (!isKeepAlive(req) || res.getStatus().getCode() != 200) {
-            f.addListener(ChannelFutureListener.CLOSE);
-        }
-    }
+		// fire open event
+		final OnMessage event = new OnMessage(request, createWsChannel(channel));
+		sendMessage(event);
 
-    @Override
-    public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e) throws Exception {
-        final OnError error = new OnError(e.getCause(), createWsChannel(ctx.getChannel()));
-        sendMessage(error);
-        // TODO strategy
-        e.getChannel().close();
-    }
+		//ctx.getChannel().write(new TextWebSocketFrame(request.toUpperCase()));
+	}
 
-    private String getWebSocketLocation(final HttpRequest req) {
-        return "ws://" + req.headers().get(HOST);
-    }
+	private static void sendHttpResponse(final ChannelHandlerContext ctx, final HttpRequest req, final HttpResponse res) {
+		// Generate an error page if response status code is not OK (200).
+		if (res.getStatus().getCode() != 200) {
+			res.setContent(ChannelBuffers.copiedBuffer(res.getStatus().toString(), CharsetUtil.UTF_8));
+			setContentLength(res, res.getContent().readableBytes());
+		}
 
-    private WebSocketLiteral createWebsocketLiteral(final Channel channel) {
-        return new WebSocketLiteral(group.getUrl(channel));
-    }
+		// Send the response and close the connection if necessary.
+		final ChannelFuture f = ctx.getChannel().write(res);
+		if (!isKeepAlive(req) || res.getStatus().getCode() != 200) {
+			f.addListener(ChannelFutureListener.CLOSE);
+		}
+	}
 
-    private WsChannel createWsChannel(final Channel channel) {
-        return new WsChannel(channel);
-    }
+	@Override
+	public void exceptionCaught(final ChannelHandlerContext ctx, final ExceptionEvent e) throws Exception {
+		final OnError error = new OnError(e.getCause(), createWsChannel(ctx.getChannel()));
+		sendMessage(error);
+		// TODO strategy
+		e.getChannel().close();
+	}
 
-    private class OpenChannelListener implements ChannelFutureListener {
+	private String getWebSocketLocation(final HttpRequest req) {
+		return "ws://" + req.headers().get(HOST);
+	}
 
-        private final String uri;
+	private WebSocketLiteral createWebsocketLiteral(final Channel channel) {
+		return new WebSocketLiteral(group.getUrl(channel));
+	}
 
-        public OpenChannelListener(final String uri) {
-            this.uri = uri;
-        }
+	private WsChannel createWsChannel(final Channel channel) {
+		return new WsChannel(channel);
+	}
 
-        @Override
-        public void operationComplete(final ChannelFuture future) throws Exception {
-            if (future.isSuccess()) {
+	private class OpenChannelListener implements ChannelFutureListener {
 
-                group.put(uri, future.getChannel());
+		private final String uri;
 
-                final OnOpen event = new OnOpen(createWsChannel(future.getChannel()));
-                sendMessage(event);
+		public OpenChannelListener(final String uri) {
+			this.uri = uri;
+		}
 
-            }
-        }
-    }
+		@Override
+		public void operationComplete(final ChannelFuture future) throws Exception {
+			if (future.isSuccess()) {
 
-    private void sendMessage(final AbstractWsEvent event) {
-        beanManager.fireEvent(event, createWebsocketLiteral(event.getChannel().getChannel()));
-    }
+				group.put(uri, future.getChannel());
+
+				final OnOpen event = new OnOpen(createWsChannel(future.getChannel()));
+				sendMessage(event);
+
+			}
+		}
+	}
+
+	private void sendMessage(final AbstractWsEvent event) {
+		beanManager.fireEvent(event, createWebsocketLiteral(event.getChannel().getChannel()));
+	}
 
 }

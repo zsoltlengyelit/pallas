@@ -1,8 +1,15 @@
 package io.pallas.core;
 
+import io.pallas.core.cdi.PallasCdiExtension;
+import io.pallas.core.cdi.StartupBean;
+import io.pallas.core.ws.WebSocketServer;
+
 import java.util.List;
 
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.spi.Bean;
+import javax.enterprise.inject.spi.BeanManager;
+import javax.inject.Inject;
 
 import org.jboss.weld.environment.se.bindings.Parameters;
 import org.jboss.weld.environment.se.events.ContainerInitialized;
@@ -15,6 +22,15 @@ import org.jboss.weld.environment.se.events.ContainerInitialized;
  */
 public class Server {
 
+	@Inject
+	private BeanManager beanManager;
+
+	@Inject
+	private PallasCdiExtension cdiExtension;
+
+	@Inject
+	private WebSocketServer socketServer;
+
 	/**
 	 *
 	 * @param event
@@ -22,7 +38,13 @@ public class Server {
 	 */
 	public void run(@Observes final ContainerInitialized event, @Parameters final List<?> parameters) {
 
-		System.out.println("Server.run()");
+		socketServer.init(8888);
+
+		for (final StartupBean startupBean : cdiExtension.getStartupBeans()) {
+			final Bean<?> bean = startupBean.getBean();
+			// note: toString() is important to instantiate the bean
+			beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(bean)).toString();
+		}
 
 	}
 
