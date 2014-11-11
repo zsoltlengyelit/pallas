@@ -1,7 +1,10 @@
 package io.pallas.core.ws;
 
+import io.pallas.core.annotations.Startup;
+
 import java.net.InetSocketAddress;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -13,39 +16,43 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
  */
+@Startup
 @ApplicationScoped
 public class WebSocketServer {
 
-	@Inject
-	private TransactionalExecutor executor;
+    @Inject
+    private TransactionalExecutor executor;
 
-	@Inject
-	private Logger logger;
+    @Inject
+    private Logger logger;
 
-	@Inject
-	private WebSocketServerPipelineFactory factory;
+    @Inject
+    private WebSocketServerPipelineFactory factory;
 
-	private ServerBootstrap bootstrap;
+    private ServerBootstrap bootstrap;
 
-	public void init(final int port) {
+    @PostConstruct
+    private void init() {
 
-		logger.info("Web socket server started at port " + port + '.');
+        final int port = 8443;
 
-		bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(executor, executor));
+        logger.info("Web socket server started at port " + port + '.');
 
-		// Set up the event pipeline factory.
-		bootstrap.setPipelineFactory(factory);
+        bootstrap = new ServerBootstrap(new NioServerSocketChannelFactory(executor, executor));
 
-		// Bind and start to accept incoming connections.
+        // Set up the event pipeline factory.
+        bootstrap.setPipelineFactory(factory);
 
-		bootstrap.bind(new InetSocketAddress(port));
+        // Bind and start to accept incoming connections.
 
-	}
+        bootstrap.bind(new InetSocketAddress(port));
 
-	@PreDestroy
-	private void stop() {
-		logger.info("Stop web socket server");
-		bootstrap.shutdown();
-	}
+    }
+
+    @PreDestroy
+    private void stop() {
+        logger.info("Stop web socket server");
+        bootstrap.shutdown();
+    }
 
 }

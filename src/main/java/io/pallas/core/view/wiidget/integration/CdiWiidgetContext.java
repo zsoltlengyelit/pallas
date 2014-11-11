@@ -1,7 +1,6 @@
 package io.pallas.core.view.wiidget.integration;
 
 import io.pallas.core.WebApplication;
-import io.pallas.core.http.HttpRequest;
 import io.pallas.core.routing.LinkBuilder;
 
 import javax.annotation.PostConstruct;
@@ -11,8 +10,9 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import org.jboss.netty.handler.codec.http.HttpResponse;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import com.landasource.wiidget.context.DefaultContext;
 
@@ -25,13 +25,16 @@ public class CdiWiidgetContext extends DefaultContext {
 	private BeanManager beanManager;
 
 	@Inject
+	private ServletContext servletContext;
+
+	@Inject
 	private WebApplication application;
 
 	@Inject
-	private HttpRequest request;
+	private HttpServletRequest request;
 
 	@Inject
-	private Instance<HttpResponse> response;
+	private Instance<HttpServletResponse> response;
 
 	@Inject
 	private Provider<LinkBuilder> linkBuilder;
@@ -39,7 +42,9 @@ public class CdiWiidgetContext extends DefaultContext {
 	@PostConstruct
 	private void init() {
 
-		set("contextPath", "/"); // TODO
+		final String contextPath = servletContext.getContextPath();
+		set("contextPath", contextPath);
+		set("contextPathPrefix", "/".equals(contextPath) ? "" : contextPath);
 		set("application", application);
 
 		set("request", request);

@@ -1,6 +1,7 @@
 package io.pallas.core.asset;
 
 import io.pallas.core.annotations.Controller;
+import io.pallas.core.annotations.DefaultAction;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.servlet.ServletContext;
 import javax.ws.rs.QueryParam;
 
 /**
@@ -18,14 +20,14 @@ public class AssetController {
 
 	@Inject
 	private AssetManager assetManager;
-
-	//	@Inject
-	//	private ServletContext context;
+	@Inject
+	private ServletContext context;
 
 	/**
 	 * @param assetKey
 	 * @return
 	 */
+	@DefaultAction
 	public AssetResponse serve(@QueryParam("file") final String assetKey) {
 
 		final Asset asset = assetManager.getAsset(assetKey);
@@ -40,8 +42,7 @@ public class AssetController {
 	public AssetResponse serveStatic(@QueryParam("file") final String file) {
 
 		try {
-			// TODO
-			final String realPath = file;//context.getRealPath("/" + file);
+			final String realPath = context.getRealPath("/" + file);
 
 			final String contentType = calculateContentType(file);
 

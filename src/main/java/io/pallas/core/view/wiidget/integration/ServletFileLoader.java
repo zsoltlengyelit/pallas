@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import javax.inject.Inject;
+import javax.servlet.ServletContext;
 
 import com.landasource.wiidget.engine.configuration.ClassPathFileLoader;
 import com.landasource.wiidget.io.FileLoader;
@@ -18,40 +19,45 @@ import com.landasource.wiidget.io.FileLoader;
  */
 public class ServletFileLoader implements FileLoader {
 
-	private final ClassPathFileLoader classPathFileLoader = new ClassPathFileLoader();
+    private final ServletContext context;
+    private final ClassPathFileLoader classPathFileLoader = new ClassPathFileLoader();
 
-	@Inject
-	@ConfProperty(name = "application.components." + ViewFactory.COMPONENT_NAME + ".viewBasePath", defaultValue = ViewFactory.DEFAULT_VIEW_PATH)
-	private String viewBasePath;
+    @Inject
+    @ConfProperty(name = "application.components." + ViewFactory.COMPONENT_NAME + ".viewBasePath", defaultValue = ViewFactory.DEFAULT_VIEW_PATH)
+    private String viewBasePath;
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see com.landasource.wiidget.io.FileLoader#getFile(java.lang.String)
-	 */
-	@Override
-	public InputStream getFile(final String filename) {
+    @Inject
+    public ServletFileLoader(final ServletContext context) {
+        this.context = context;
+    }
 
-		final String fullPath = getContextPath(filename);
+    /*
+     * (non-Javadoc)
+     * @see com.landasource.wiidget.io.FileLoader#getFile(java.lang.String)
+     */
+    @Override
+    public InputStream getFile(final String filename) {
 
-		try {
-			return new FileInputStream(fullPath);
-		} catch (final FileNotFoundException e) {
-			return classPathFileLoader.getFile(filename);
-		}
-	}
+        final String fullPath = getContextPath(filename);
 
-	private String getContextPath(final String filename) {
-		return viewBasePath + "/" + filename; // TODO
-	}
+        try {
+            return new FileInputStream(fullPath);
+        } catch (final FileNotFoundException e) {
+            return classPathFileLoader.getFile(filename);
+        }
+    }
 
-	@Override
-	public boolean exists(final String filename) {
+    private String getContextPath(final String filename) {
+        return context.getRealPath(viewBasePath + "/" + filename);
+    }
 
-		final String fullPath = getContextPath(filename);
+    @Override
+    public boolean exists(final String filename) {
 
-		final boolean isFile = new File(fullPath).isFile();
-		return isFile ? isFile : classPathFileLoader.exists(fullPath);
-	}
+        final String fullPath = getContextPath(filename);
+
+        final boolean isFile = new File(fullPath).isFile();
+        return isFile ? isFile : classPathFileLoader.exists(fullPath);
+    }
 
 }

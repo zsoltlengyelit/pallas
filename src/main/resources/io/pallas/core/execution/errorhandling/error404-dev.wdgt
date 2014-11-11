@@ -62,7 +62,7 @@
 	
 	"body"{
 		
-		"div"(class="error-message"){`exception.getMessage()`;}
+		"div"(class="error-message"){`""+exception.getMessage()`;}
 		
 		"div"(class="stack"){
 			foreach(stack : exception.stackTrace){

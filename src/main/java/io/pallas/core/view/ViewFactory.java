@@ -5,7 +5,6 @@ import io.pallas.core.annotations.Configured;
 import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.ControllerNameResolver;
 import io.pallas.core.execution.InternalServerErrorException;
-import io.pallas.core.http.HttpRequest;
 import io.pallas.core.view.html.HtmlView;
 import io.pallas.core.view.wiidget.integration.CdiEngine;
 import io.pallas.core.view.wiidget.integration.WiidgeFileView;
@@ -17,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import com.google.common.base.Strings;
 
@@ -29,13 +29,13 @@ public class ViewFactory {
 	public static final String COMPONENT_NAME = "viewFactory";
 
 	public static final String DEFAULT_VIEW_FILE_SUFFIX = ".wdgt";
-	public static final String DEFAULT_VIEW_PATH = "/WEB-INF/view";
+	public static final String DEFAULT_VIEW_PATH = "/view";
 
 	@Inject
 	private CdiEngine wiidgetFactory;
 
 	@Inject
-	private HttpRequest request;
+	private HttpServletRequest request;
 
 	@Inject
 	@Configured(defaultValue = DEFAULT_VIEW_PATH)
@@ -117,11 +117,11 @@ public class ViewFactory {
 
 		// at first try without suffix
 		String viewPath = viewBasePath + '/' + filePath;
-		String realPath = viewPath;// TODO request.getServletContext().getRealPath(viewPath);
+		String realPath = request.getServletContext().getRealPath(viewPath);
 
 		if (null == realPath || !new File(realPath).isFile()) {
 			viewPath = viewBasePath + '/' + filePath + viewFileSuffix;
-			realPath = viewPath;// TODO request.getServletContext().getRealPath(viewPath);
+			realPath = request.getServletContext().getRealPath(viewPath);
 		}
 
 		return realPath;

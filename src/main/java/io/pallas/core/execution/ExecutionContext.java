@@ -10,6 +10,7 @@ import io.pallas.core.execution.errorhandling.HttpErrorHandler;
 import io.pallas.core.view.View;
 import io.pallas.core.view.ViewRenderer;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -19,11 +20,10 @@ import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.Produces;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.handler.codec.http.HttpRequest;
-import org.jboss.netty.handler.codec.http.HttpResponse;
 
 /**
  * @author Zsolt Lengyel (zsolt.lengyel.it@gmail.com)
@@ -32,143 +32,143 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 @Alternative
 public class ExecutionContext {
 
-	@Inject
-	private Logger logger;
+    @Inject
+    private Logger logger;
 
-	@Inject
-	private CdiBeans cdiBeans;
+    @Inject
+    private CdiBeans cdiBeans;
 
-	@Inject
-	private ControllerFactory controllerFactory;
+    @Inject
+    private ControllerFactory controllerFactory;
 
-	@Inject
-	private ActionParamsProvider actionParamsProvider;
+    @Inject
+    private ActionParamsProvider actionParamsProvider;
 
-	@Inject
-	private Instance<ViewRenderer> viewRenderer;
+    @Inject
+    private Instance<ViewRenderer> viewRenderer;
 
-	private HttpRequest request = null;
+    private HttpServletRequest request = null;
 
-	private HttpResponse response = null;
+    private HttpServletResponse response = null;
 
-	private ControllerAction controllerAction;
+    private ControllerAction controllerAction;
 
-	/**
-	 * @param httpRequest
-	 * @param httpResponse
-	 */
-	public void execute(final HttpRequest httpRequest, final HttpResponse httpResponse) {
+    /**
+     * @param httpRequest
+     * @param httpResponse
+     */
+    public void execute(final HttpServletRequest httpRequest, final HttpServletResponse httpResponse) {
 
-		try {
-			// produced beans
-			request = httpRequest;
-			final io.pallas.core.http.HttpRequest pallasRequest = CdiBeans.of(io.pallas.core.http.HttpRequest.class);
-			response = httpResponse;
-			Object result;
-			try {
-				controllerAction = controllerFactory.createController(pallasRequest);
+        try {
+            // produced beans
+            request = httpRequest;
+            response = httpResponse;
+            Object result;
+            try {
+                controllerAction = controllerFactory.createController(httpRequest);
 
-				if (null == controllerAction) {
+                if (null == controllerAction) {
 
-					result = handleHttpError(new ActionNotFoundException(pallasRequest.getPath()), httpResponse);
+                    result = handleHttpError(new ActionNotFoundException(httpRequest.getPathInfo()), httpResponse);
 
-				} else {
+                } else {
 
-					try {
+                    try {
 
-						result = invokeController(controllerAction, pallasRequest);
+                        result = invokeController(controllerAction, httpRequest);
 
-					} catch (final HttpException httpException) {
-						result = handleHttpError(httpException, httpResponse);
+                    } catch (final HttpException httpException) {
+                        result = handleHttpError(httpException, httpResponse);
 
-					} catch (final Throwable exception) {
-						result = handleHttpError(new InternalServerErrorException(exception), httpResponse);
-					}
+                    } catch (final Throwable exception) {
+                        result = handleHttpError(new InternalServerErrorException(exception), httpResponse);
+                    }
 
-				}
+                }
 
-			} catch (final PageNotFoundException | RoutingException exception) {
-				result = handleHttpError(exception, httpResponse);
-			}
+            } catch (final PageNotFoundException | RoutingException exception) {
+                result = handleHttpError(exception, httpResponse);
+            }
 
-			handleResult(httpResponse, result);
-		} catch (final Throwable throwable) {
+            handleResult(httpResponse, result);
+        } catch (final Throwable throwable) {
 
-			final Object result = handleHttpError(new InternalServerErrorException(throwable), httpResponse);
-			handleResult(httpResponse, result);
+            final Object result = handleHttpError(new InternalServerErrorException(throwable), httpResponse);
+            handleResult(httpResponse, result);
 
-		} finally {
-			request = null;
-			response = null;
-			controllerAction = null;
-		}
+        } finally {
+            request = null;
+            response = null;
+            controllerAction = null;
+        }
 
-	}
+    }
 
-	@Produces
-	@Default
-	public HttpRequest produceRequest() {
-		return request;
-	}
+    @Produces
+    @Default
+    public HttpServletRequest produceRequest() {
+        return request;
+    }
 
-	@Produces
-	@Default
-	public HttpResponse produceResponse() {
-		return response;
-	}
+    @Produces
+    @Default
+    public HttpServletResponse produceResponse() {
+        return response;
+    }
 
-	@Produces
-	@Default
-	public ControllerAction produceControllerAction() {
-		return controllerAction;
-	}
+    @Produces
+    @Default
+    public ControllerAction produceControllerAction() {
+        return controllerAction;
+    }
 
-	private Object handleHttpError(final HttpException serverException, final HttpResponse response) {
+    private Object handleHttpError(final HttpException serverException, final HttpServletResponse response) {
 
-		final HttpErrorHandler errorHandler = cdiBeans.lookup(HttpErrorHandler.class);
-		return errorHandler.handle(serverException, response);
-	}
+        final HttpErrorHandler errorHandler = cdiBeans.lookup(HttpErrorHandler.class);
+        return errorHandler.handle(serverException, response);
+    }
 
-	private void handleResult(final HttpResponse response, final Object result) {
+    private void handleResult(final HttpServletResponse response, final Object result) {
 
-		if (null == result) {
-			return;
+        if (null == result) {
+            return;
 
-		} else if (View.class.isAssignableFrom(result.getClass())) {
+        } else if (View.class.isAssignableFrom(result.getClass())) {
 
-			viewRenderer.get().render((View) result, response);
+            viewRenderer.get().render((View) result, response);
 
-		} else if (Response.class.isAssignableFrom(result.getClass())) {
+        } else if (Response.class.isAssignableFrom(result.getClass())) {
 
-			((Response) result).render(response);
+            ((Response) result).render(response);
 
-		} else if (result instanceof String) {
+        } else if (result instanceof String) {
+            try {
+                response.getWriter().append((String) result);
+            } catch (final IOException e) {
+                throw new InternalServerErrorException("Cannot write response", e);
+            }
+        } else {
+            throw new InternalServerErrorException("Cannot handle result type: " + result.getClass());
+        }
 
-			final String stringResult = (String) result;
-			response.setContent(ChannelBuffers.copiedBuffer(stringResult.getBytes()));
+    }
 
-		} else {
-			throw new InternalServerErrorException("Cannot handle result type: " + result.getClass());
-		}
+    private Object invokeController(final ControllerAction controller, final HttpServletRequest request) {
 
-	}
+        try {
+            final Method action = controller.getAction();
 
-	private Object invokeController(final ControllerAction controller, final io.pallas.core.http.HttpRequest request) {
+            final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
 
-		try {
-			final Method action = controller.getAction();
+            final Object object = controller.getController();
 
-			final Object[] parameters = actionParamsProvider.getActionParams(action.getParameterTypes(), action.getParameterAnnotations());
+            final Object result = action.invoke(object, parameters);
+            return result;
 
-			final Object object = controller.getController();
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
+            throw new InternalServerErrorException("Error while call controller action: " + exception.getMessage(), exception);
+        }
 
-			final Object result = action.invoke(object, parameters);
-			return result;
-
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException exception) {
-			throw new InternalServerErrorException("Error while call controller action: " + exception.getMessage(), exception);
-		}
-
-	}
+    }
 
 }
