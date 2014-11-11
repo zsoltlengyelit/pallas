@@ -1,15 +1,15 @@
 package io.pallas.core.container;
 
-import io.undertow.server.handlers.resource.FileResourceManager;
+import io.pallas.core.WebApplication;
+import io.pallas.core.cdi.CdiBeans;
+import io.undertow.server.handlers.resource.ClassPathResourceManager;
 
 /**
- *
  * @author lzsolt
- *
  */
-public class ResourceManager extends FileResourceManager {
+public class ResourceManager extends ClassPathResourceManager {
 
-	public ResourceManager() {
-		super(new java.io.File("./src/main/webapp"), 1000);
-	}
+    public ResourceManager() {
+        super(CdiBeans.of(WebApplication.class).getRealClass().getClassLoader(), "webapp");
+    }
 }

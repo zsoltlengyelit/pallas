@@ -59,6 +59,10 @@ public class Application extends Module {
         logger.debug(modulesToString);
     }
 
+    public Class<?> getRealClass() {
+        return getClass();
+    }
+
     /**
      * @param ip
      *            injection pont
