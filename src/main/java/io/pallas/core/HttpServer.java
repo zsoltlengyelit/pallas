@@ -7,6 +7,8 @@ import io.pallas.core.servlet.PallasServlet;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.predicate.Predicates;
+import io.undertow.server.HttpHandler;
+import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.PredicateHandler;
 import io.undertow.server.handlers.resource.ResourceHandler;
 import io.undertow.server.handlers.resource.ResourceManager;
@@ -56,6 +58,9 @@ public class HttpServer {
 	@Inject
 	private CdiInstanceFactory instanceFactory;
 
+	@Inject
+	private DefaultWebSocketConnectionCallback webSocketSessionHandler;
+
 	public void init(@Observes final ContainerInitialized initialized) throws ServletException {
 
 		logger.info("Start server at port: " + port);
@@ -64,19 +69,26 @@ public class HttpServer {
 		servletInfo.setInstanceFactory(instanceFactory);
 
 		final DeploymentInfo servletBuilder = Servlets.deployment().setClassLoader(PallasServlet.class.getClassLoader()).setContextPath("/").setDeploymentName("pallas.war")
-				.addServlets(servletInfo);
+		        .addServlets(servletInfo);
 
 		servletBuilder.setResourceManager(resourceManager);
 
 		final DeploymentManager manager = Servlets.defaultContainer().addDeployment(servletBuilder);
 		manager.deploy();
 
-		final ResourceHandler fileHandler = Handlers.resource(resourceManager);
-		final PredicateHandler handler = Handlers.predicate(Predicates.prefix(staticPath), fileHandler, manager.start());
+		final HttpHandler handler = getHandlers(manager);
 
-		final Undertow server = Undertow.builder().addHttpListener(Integer.parseInt(port), "localhost").setHandler(handler).build();
+		final Undertow server = Undertow.builder().addHttpListener(Float.valueOf(port).intValue(), "localhost").setHandler(handler).build();
+
 		server.start();
-
 	}
 
+	private PredicateHandler getHandlers(final DeploymentManager manager) throws ServletException {
+		final ResourceHandler fileHandler = Handlers.resource(resourceManager);
+		final PredicateHandler handler = Handlers.predicate(Predicates.prefix(staticPath), fileHandler, manager.start());
+		final PathHandler websocketHandler = Handlers.path().addPrefixPath("/ws", Handlers.websocket(webSocketSessionHandler));
+
+		final PredicateHandler rootHandler = Handlers.predicate(Predicates.prefix("/ws"), websocketHandler, handler);
+		return rootHandler;
+	}
 }

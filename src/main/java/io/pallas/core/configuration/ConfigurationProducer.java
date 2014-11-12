@@ -26,7 +26,7 @@ public class ConfigurationProducer {
 
 		final AnnotatedField<?> annotatedField = (AnnotatedField<?>) injectionPoint.getAnnotated();
 
-		final String fielName = annotatedField.getJavaMember().getName();
+		final String fieldName = annotatedField.getJavaMember().getName();
 		final Component annotation = injectionPoint.getBean().getBeanClass().getAnnotation(Component.class);
 
 		if (null != annotation) {
@@ -34,7 +34,7 @@ public class ConfigurationProducer {
 
 			// dedicated name
 			// FIXME dedicated name for components
-			final String reference = configuration.getString(/* "application.components." + */componentName + "." + fielName);
+			final String reference = configuration.getString(/* "application.components." + */componentName + "." + fieldName);
 
 			return Optional.fromNullable(reference).or(defaultValue);
 		}
