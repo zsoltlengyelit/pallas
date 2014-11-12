@@ -4,6 +4,7 @@ import io.pallas.core.annotations.Component;
 import io.pallas.core.annotations.Configured;
 import io.pallas.core.container.CdiInstanceFactory;
 import io.pallas.core.servlet.PallasServlet;
+import io.pallas.core.ws.WebSocketConnectionHandler;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.predicate.Predicates;
@@ -59,7 +60,7 @@ public class HttpServer {
 	private CdiInstanceFactory instanceFactory;
 
 	@Inject
-	private DefaultWebSocketConnectionCallback webSocketSessionHandler;
+	private WebSocketConnectionHandler webSocketSessionHandler;
 
 	public void init(@Observes final ContainerInitialized initialized) throws ServletException {
 

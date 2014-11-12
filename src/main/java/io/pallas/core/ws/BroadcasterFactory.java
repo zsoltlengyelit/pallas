@@ -8,17 +8,17 @@ import javax.inject.Inject;
 
 public class BroadcasterFactory {
 
-    @Inject
-    private UrlMapperGroup group;
+	@Inject
+	private WebSocketConnectionHandler connectionHandler;
 
-    @Produces
-    @WebSocket(path = "/*")
-    public Broadcaster produce(final InjectionPoint point) {
+	@Produces
+	@WebSocket(path = "/*")
+	public Broadcaster produce(final InjectionPoint point) {
 
-        final WebSocket annotation = point.getAnnotated().getAnnotation(WebSocket.class);
-        final String path = annotation.path();
+		final WebSocket annotation = point.getAnnotated().getAnnotation(WebSocket.class);
+		final String path = annotation.path();
 
-        return new Broadcaster(path, group);
-    }
+		return new Broadcaster(path, connectionHandler);
+	}
 
 }
