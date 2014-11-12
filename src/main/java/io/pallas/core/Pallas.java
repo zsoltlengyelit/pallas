@@ -24,33 +24,34 @@ import com.google.common.base.Strings;
 @Startup
 public class Pallas {
 
-    public static final String NAME = "Pallas";
+	public static final String NAME = "Pallas";
 
-    public static final String VERSION = "0.1.0";
+	public static final String VERSION = "0.1.0";
 
-    @Inject
-    private Event<ApplicationStart> applicationStartEvent;
+	@Inject
+	private Event<ApplicationStart> applicationStartEvent;
 
-    @Inject
-    private Logger logger;
+	@Inject
+	private Logger logger;
 
-    public static RunMode getRunMode() {
+	// TODO configuration value
+	public static RunMode getRunMode() {
 
-        final String mode = System.getProperty("pallas.mode", RunMode.PRODUCTION.name());
+		final String mode = System.getProperty("pallas.mode", RunMode.PRODUCTION.name());
 
-        if (Strings.isNullOrEmpty(mode)) {
-            return RunMode.PRODUCTION;
-        } else {
-            return RunMode.valueOf(mode.toUpperCase());
-        }
-    }
+		if (Strings.isNullOrEmpty(mode)) {
+			return RunMode.PRODUCTION;
+		} else {
+			return RunMode.valueOf(mode.toUpperCase());
+		}
+	}
 
-    @PostConstruct
-    private void initApplication() {
+	@PostConstruct
+	private void initApplication() {
 
-        logger.info(String.format("%s#%s application has started in %s mode.", NAME, VERSION, getRunMode().name()));
+		logger.info(String.format("%s#%s application has started in %s mode.", NAME, VERSION, getRunMode().name()));
 
-        applicationStartEvent.fire(new ApplicationStart());
-    }
+		applicationStartEvent.fire(new ApplicationStart());
+	}
 
 }

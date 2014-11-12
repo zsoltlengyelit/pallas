@@ -21,116 +21,123 @@ import com.google.common.base.Optional;
  */
 public class JsConfiguration implements Configuration {
 
-    /** Path to configuration. */
-    private static final String CONFIGURATION_FILE = "configuration.js";
+	/** Path to configuration. */
+	private static final String CONFIGURATION_FILE = "configuration.js";
 
-    @Inject
-    private Logger logger;
+	@Inject
+	private Logger logger;
 
-    /**
-     * The parse content of configuration.
-     */
-    private Map<Object, Object> configuration;
+	/**
+	 * The parse content of configuration.
+	 */
+	private Map<Object, Object> configuration;
 
-    @PostConstruct
-    @SuppressWarnings("unchecked")
-    private void init() {
+	@PostConstruct
+	@SuppressWarnings("unchecked")
+	private void init() {
 
-        final InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE); // lookup for overrided configuration
+		final InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream(CONFIGURATION_FILE); // lookup for overrided configuration
 
-        if (null == resourceAsStream) {
-            //  logger.info("No configuration file found.");
-            return;
-        }
+		if (null == resourceAsStream) {
+			//  logger.info("No configuration file found.");
+			return;
+		}
 
-        final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("javascript");
-        final StringWriter stringWriter = new StringWriter();
-        scriptEngine.getContext().setWriter(stringWriter);
-        try {
+		final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("javascript");
+		final StringWriter stringWriter = new StringWriter();
+		scriptEngine.getContext().setWriter(stringWriter);
+		try {
 
-            final String content = IOUtils.toString(resourceAsStream);
-            scriptEngine.eval(content);
+			final String content = IOUtils.toString(resourceAsStream);
+			scriptEngine.eval(content);
 
-            configuration = (Map<Object, Object>) scriptEngine.get("configuration");
+			configuration = (Map<Object, Object>) scriptEngine.get("configuration");
 
-        } catch (final ScriptException exception) {
-            throw new ConfigurationException("Cannot evaluate configuration script.", exception);
-        } catch (final IOException exception) {
-            throw new ConfigurationException("Cannot read configuration script.", exception);
-        }
-    }
+		} catch (final ScriptException exception) {
+			throw new ConfigurationException("Cannot evaluate configuration script.", exception);
+		} catch (final IOException exception) {
+			throw new ConfigurationException("Cannot read configuration script.", exception);
+		}
+	}
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> T getValue(final String path) {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T getValue(final String path) {
 
-        if (null == configuration) {
-            return null;
-        }
+		// first check system property
+		final String systemProperty = System.getProperty(path);
+		if (null != systemProperty) {
+			// FIXME use converter
+			return (T) systemProperty;
+		}
 
-        final String[] parts = path.split("\\.");
+		if (null == configuration) {
+			return null;
+		}
 
-        Object base = configuration;
-        for (final String part : parts) {
+		final String[] parts = path.split("\\.");
 
-            if (null == base) {
-                break;
-            }
-            if (base instanceof Map) {
-                base = ((Map<String, Object>) base).get(part);
-            }
-        }
+		Object base = configuration;
+		for (final String part : parts) {
 
-        if (null == base) {
-            // finally try to find the path string
-            return (T) configuration.get(path);
-        }
+			if (null == base) {
+				break;
+			}
+			if (base instanceof Map) {
+				base = ((Map<String, Object>) base).get(part);
+			}
+		}
 
-        return (T) base;
-    }
+		if (null == base) {
+			// finally try to find the path string
+			return (T) configuration.get(path);
+		}
 
-    @Override
-    public String getString(final String path) {
+		return (T) base;
+	}
 
-        final Object value = getValue(path);
-        return null == value ? null : String.valueOf(value);
-    }
+	@Override
+	public String getString(final String path) {
 
-    @Override
-    public boolean getBoolean(final String path) {
-        final Object value = getValue(path);
-        return null == value ? null : Boolean.valueOf(value.toString());
-    }
+		final Object value = getValue(path);
+		return null == value ? null : String.valueOf(value);
+	}
 
-    @Override
-    public int getInt(final String path) {
-        final Object value = getValue(path);
+	@Override
+	public boolean getBoolean(final String path) {
+		final Object value = getValue(path);
+		return null == value ? null : Boolean.valueOf(value.toString());
+	}
 
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
+	@Override
+	public int getInt(final String path) {
+		final Object value = getValue(path);
 
-        return null == value ? null : Integer.valueOf(value.toString());
-    }
+		if (value instanceof Number) {
+			return ((Number) value).intValue();
+		}
 
-    @Override
-    public <T> T getValue(final String path, final T defaultValue) {
-        return Optional.fromNullable((T) getValue(path)).or(defaultValue);
-    }
+		return null == value ? null : Integer.valueOf(value.toString());
+	}
 
-    @Override
-    public String getString(final String path, final String defaultValue) {
-        return Optional.fromNullable(getString(path)).or(defaultValue);
-    }
+	@Override
+	public <T> T getValue(final String path, final T defaultValue) {
+		return Optional.fromNullable((T) getValue(path)).or(defaultValue);
+	}
 
-    @Override
-    public boolean getBoolean(final String path, final boolean defaultValue) {
+	@Override
+	public String getString(final String path, final String defaultValue) {
+		return Optional.fromNullable(getString(path)).or(defaultValue);
+	}
 
-        return Optional.fromNullable(getBoolean(path)).or(defaultValue);
-    }
+	@Override
+	public boolean getBoolean(final String path, final boolean defaultValue) {
 
-    @Override
-    public int getInt(final String path, final int defaultValue) {
-        return Optional.fromNullable(getInt(path)).or(defaultValue);
-    }
+		return Optional.fromNullable(getBoolean(path)).or(defaultValue);
+	}
+
+	@Override
+	public int getInt(final String path, final int defaultValue) {
+		return Optional.fromNullable(getInt(path)).or(defaultValue);
+	}
 }

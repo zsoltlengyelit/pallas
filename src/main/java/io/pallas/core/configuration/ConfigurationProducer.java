@@ -33,7 +33,8 @@ public class ConfigurationProducer {
 			final String componentName = annotation.value();
 
 			// dedicated name
-			final String reference = configuration.getString("application.components." + componentName + "." + fielName);
+			// FIXME dedicated name for components
+			final String reference = configuration.getString(/* "application.components." + */componentName + "." + fielName);
 
 			return Optional.fromNullable(reference).or(defaultValue);
 		}
