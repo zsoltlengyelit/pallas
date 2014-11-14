@@ -7,6 +7,8 @@ import io.pallas.core.view.View;
 import io.pallas.core.view.ViewRenderer;
 import io.pallas.core.view.engines.ViewFactory;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -36,7 +38,7 @@ public class FreemarkerViewFactory extends ViewFactory {
 
 	@Override
 	public View createFromPath(final String view) {
-		return null;
+		return create(view, null);
 	}
 
 	@Override
@@ -49,7 +51,7 @@ public class FreemarkerViewFactory extends ViewFactory {
 
 			templateLoader.addTemplate(PALLAS_VIEW_TEMPLATE_NAME, template);
 
-			return new FreemarkerView(inputStream, configuration, PALLAS_VIEW_TEMPLATE_NAME);
+			return new FreemarkerView(configuration, PALLAS_VIEW_TEMPLATE_NAME);
 		} catch (final IOException e) {
 			throw new InternalServerErrorException(e);
 		}
@@ -59,7 +61,21 @@ public class FreemarkerViewFactory extends ViewFactory {
 	@Override
 	public View create(final String view, final Model model) {
 
-		return null;
+		final String realPath = getViewPath(view);
+
+		try {
+			final StringTemplateLoader templateLoader = (StringTemplateLoader) configuration.getTemplateLoader();
+
+			final InputStream inputStream = new FileInputStream(realPath);
+			templateLoader.addTemplate(PALLAS_VIEW_TEMPLATE_NAME, IOUtils.toString(inputStream));
+
+			return new FreemarkerFileView(realPath, model, configuration, PALLAS_VIEW_TEMPLATE_NAME);
+		} catch (final FileNotFoundException exception) {
+			throw new InternalServerErrorException(exception);
+		} catch (final IOException exception) {
+			throw new InternalServerErrorException(exception);
+		}
+
 	}
 
 	@Override

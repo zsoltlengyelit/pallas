@@ -33,7 +33,10 @@ public class FreemarkerViewRenderer extends ViewRenderer {
 		}
 
 		final String controllerTemplate = getTemplate().getPath();
-		final String templatePath = getViewFactory().getViewPath(controllerTemplate);
+		String templatePath = controllerTemplate.concat(getViewFactory().getViewFileSuffix()); // getViewFactory().getViewPath(controllerTemplate);
+
+		final String viewBasePath = getViewFactory().getViewBasePath();
+		templatePath = viewBasePath.endsWith("/") ? viewBasePath + templatePath : viewBasePath + "/" + templatePath;
 
 		try {
 
@@ -70,5 +73,4 @@ public class FreemarkerViewRenderer extends ViewRenderer {
 		}
 
 	}
-
 }
