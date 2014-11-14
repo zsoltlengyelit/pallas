@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 
+import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
@@ -20,6 +21,9 @@ public class FreemarkerViewRenderer extends ViewRenderer {
 
 	@Inject
 	private CdiConfiguration configuration;
+
+	@Inject
+	private Instance<ContextModel> contextModel;
 
 	@Override
 	public void render(final View view, final HttpServletResponse response) {
@@ -44,7 +48,8 @@ public class FreemarkerViewRenderer extends ViewRenderer {
 
 				try {
 
-					final io.pallas.core.view.Model model = new io.pallas.core.view.Model();
+					final ContextModel model = contextModel.get();
+					model.setAll(model);
 					model.set("content", viewContent);
 
 					final Template freemarkerTemplate = configuration.getTemplate(templatePath);

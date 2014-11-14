@@ -36,6 +36,9 @@ public class FreemarkerViewFactory extends ViewFactory {
 	@Inject
 	private Instance<FreemarkerViewRenderer> viewRenderer;
 
+	@Inject
+	private Instance<ContextModel> contextModel;
+
 	@Override
 	public View createFromPath(final String view) {
 		return create(view, null);
@@ -64,12 +67,13 @@ public class FreemarkerViewFactory extends ViewFactory {
 		final String realPath = getViewPath(view);
 
 		try {
+
+			final String template = IOUtils.toString(new FileInputStream(realPath));
 			final StringTemplateLoader templateLoader = (StringTemplateLoader) configuration.getTemplateLoader();
+			templateLoader.addTemplate(PALLAS_VIEW_TEMPLATE_NAME, template);
 
-			final InputStream inputStream = new FileInputStream(realPath);
-			templateLoader.addTemplate(PALLAS_VIEW_TEMPLATE_NAME, IOUtils.toString(inputStream));
-
-			return new FreemarkerFileView(realPath, model, configuration, PALLAS_VIEW_TEMPLATE_NAME);
+			final Model mergedModel = contextModel.get().setAll(model);
+			return new FreemarkerFileView(realPath, mergedModel, configuration, PALLAS_VIEW_TEMPLATE_NAME);
 		} catch (final FileNotFoundException exception) {
 			throw new InternalServerErrorException(exception);
 		} catch (final IOException exception) {

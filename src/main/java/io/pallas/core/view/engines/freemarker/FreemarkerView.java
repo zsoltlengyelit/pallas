@@ -54,4 +54,8 @@ public class FreemarkerView extends AbstractView {
 
 	}
 
+	protected CdiConfiguration getConfiguration() {
+		return configuration;
+	}
+
 }
