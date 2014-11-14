@@ -1,6 +1,7 @@
-package io.pallas.core.view.wiidget.integration;
+package io.pallas.core.view.engines.wiidget.integration;
 
 import io.pallas.core.view.Model;
+import io.pallas.core.view.engines.wiidget.WiidgetView;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

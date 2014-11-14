@@ -1,4 +1,4 @@
-package io.pallas.core.view.wiidget;
+package io.pallas.core.view.engines;
 
 import io.pallas.core.view.AbstractView;
 import io.pallas.core.view.Model;

@@ -1,4 +1,4 @@
-package io.pallas.core.view.wiidget.integration;
+package io.pallas.core.view.engines.wiidget.integration;
 
 import java.lang.reflect.Type;
 import java.util.Iterator;

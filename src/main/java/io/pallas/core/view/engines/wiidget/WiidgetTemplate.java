@@ -1,4 +1,4 @@
-package io.pallas.core.view.wiidget;
+package io.pallas.core.view.engines.wiidget;
 
 import io.pallas.core.annotations.Ignored;
 import io.pallas.core.view.Template;

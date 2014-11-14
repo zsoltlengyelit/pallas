@@ -2,7 +2,7 @@ package io.pallas.core.view.html;
 
 import io.pallas.core.execution.InternalServerErrorException;
 import io.pallas.core.view.Model;
-import io.pallas.core.view.wiidget.StreamedView;
+import io.pallas.core.view.engines.StreamedView;
 
 import java.io.IOException;
 import java.io.InputStream;

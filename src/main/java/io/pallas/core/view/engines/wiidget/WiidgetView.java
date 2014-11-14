@@ -1,7 +1,7 @@
-package io.pallas.core.view.wiidget.integration;
+package io.pallas.core.view.engines.wiidget;
 
 import io.pallas.core.view.Model;
-import io.pallas.core.view.wiidget.StreamedView;
+import io.pallas.core.view.engines.StreamedView;
 
 import java.io.InputStream;
 

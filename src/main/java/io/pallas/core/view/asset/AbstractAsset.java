@@ -1,4 +1,4 @@
-package io.pallas.core.view.wiidget.asset;
+package io.pallas.core.view.asset;
 
 import io.pallas.core.asset.AssetManager;
 

@@ -1,7 +1,7 @@
-package io.pallas.core.view.wiidget.integration;
+package io.pallas.core.view.engines.wiidget.integration;
 
 import io.pallas.core.configuration.ConfProperty;
-import io.pallas.core.view.ViewFactory;
+import io.pallas.core.view.engines.wiidget.WiidgetViewFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +23,7 @@ public class ServletFileLoader implements FileLoader {
     private final ClassPathFileLoader classPathFileLoader = new ClassPathFileLoader();
 
     @Inject
-    @ConfProperty(name = "application.components." + ViewFactory.COMPONENT_NAME + ".viewBasePath", defaultValue = ViewFactory.DEFAULT_VIEW_PATH)
+    @ConfProperty(name = "application.components." + WiidgetViewFactory.COMPONENT_NAME + ".viewBasePath", defaultValue = WiidgetViewFactory.DEFAULT_VIEW_PATH)
     private String viewBasePath;
 
     @Inject

@@ -1,4 +1,4 @@
-package io.pallas.core.view.wiidget.integration;
+package io.pallas.core.view.engines.wiidget.integration;
 
 import io.pallas.core.WebApplication;
 import io.pallas.core.routing.LinkBuilder;

@@ -8,7 +8,7 @@ import io.pallas.core.controller.ControllerAction;
 import io.pallas.core.controller.action.param.ActionParamProducer;
 import io.pallas.core.execution.ExecutionContext;
 import io.pallas.core.util.LoggerProducer;
-import io.pallas.core.view.ViewFactory;
+import io.pallas.core.view.engines.wiidget.WiidgetViewFactory;
 
 import javax.enterprise.inject.spi.Extension;
 
@@ -41,7 +41,7 @@ public class ArchiveUtil {
      * @return web archive
      */
     public static JavaArchive buildDefault(final Class<?>... classes) {
-        return build().addPackages(true, Pallas.class.getPackage()).addClasses(ActionParamProducer.class, ExecutionContext.class, ControllerAction.class, ViewFactory.class)
+        return build().addPackages(true, Pallas.class.getPackage()).addClasses(ActionParamProducer.class, ExecutionContext.class, ControllerAction.class, WiidgetViewFactory.class)
                 .addClasses(classes).addAsManifestResource(new StringAsset(PallasCdiExtension.class.getCanonicalName()), "services/javax.enterprise.inject.spi.Extension")
                 .addClasses(PallasCdiExtension.class, DeploymentException.class).addAsServiceProvider(Extension.class, PallasCdiExtension.class);
     }
