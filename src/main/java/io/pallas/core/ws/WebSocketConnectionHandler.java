@@ -24,67 +24,66 @@ import org.xnio.ChannelListener;
 @ApplicationScoped
 public class WebSocketConnectionHandler implements WebSocketConnectionCallback {
 
-	// use real set
-	private final ConcurrentHashMap<WebSocketChannel, String> webSocketChannels = new ConcurrentHashMap<WebSocketChannel, String>();
+    // use real set
+    private final ConcurrentHashMap<WebSocketChannel, String> webSocketChannels = new ConcurrentHashMap<WebSocketChannel, String>();
 
-	@Inject
-	private BeanManager beanManager;
+    @Inject
+    private BeanManager beanManager;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	public void onConnect(final WebSocketHttpExchange exchange, final WebSocketChannel channel) {
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    public void onConnect(final WebSocketHttpExchange exchange, final WebSocketChannel channel) {
 
-		synchronized (webSocketChannels) {
-			webSocketChannels.put(channel, exchange.getRequestURI());
+        webSocketChannels.put(channel, exchange.getRequestURI());
 
-			channel.getCloseSetter().set(new ChannelListener() {
-				@Override
-				public void handleEvent(final java.nio.channels.Channel channel) {
-					synchronized (webSocketChannels) {
-						webSocketChannels.remove(channel);
+        channel.getCloseSetter().set(new ChannelListener() {
+            @Override
+            public void handleEvent(final java.nio.channels.Channel channel) {
 
-						// send event
-						final OnClose close = new OnClose(new WsChannel((WebSocketChannel) channel, null));
-						sendMessage(close);
-					}
-				}
+                webSocketChannels.remove(channel);
 
-			});
+                // send event
+                final OnClose close = new OnClose(new WsChannel((WebSocketChannel) channel, null));
+                sendMessage(close);
 
-			channel.getReceiveSetter().set(new AbstractReceiveListener() {
+            }
 
-				@Override
-				protected void onFullTextMessage(final WebSocketChannel channel, final BufferedTextMessage message) {
-					final String messageData = message.getData();
+        });
 
-					// send event
-					final OnMessage messageEvent = new OnMessage(messageData, createWsChannel(channel, exchange));
-					sendMessage(messageEvent);
-				}
-			});
+        channel.getReceiveSetter().set(new AbstractReceiveListener() {
 
-			// send CDI event
-			final OnOpen event = new OnOpen(createWsChannel(channel, exchange));
-			sendMessage(event);
+            @Override
+            protected void onFullTextMessage(final WebSocketChannel channel, final BufferedTextMessage message) {
+                final String messageData = message.getData();
 
-			channel.resumeReceives();
-		}
-	}
+                // send event
+                final OnMessage messageEvent = new OnMessage(messageData, createWsChannel(channel, exchange));
+                sendMessage(messageEvent);
+            }
+        });
 
-	private WsChannel createWsChannel(final WebSocketChannel channel, final WebSocketHttpExchange exchange) {
-		return new WsChannel(channel, exchange);
-	}
+        // send CDI event
+        final OnOpen event = new OnOpen(createWsChannel(channel, exchange));
+        sendMessage(event);
 
-	private void sendMessage(final AbstractWsEvent event) {
-		beanManager.fireEvent(event, createWebsocketLiteral(event.getChannel().getChannel()));
-	}
+        channel.resumeReceives();
 
-	private WebSocketLiteral createWebsocketLiteral(final WebSocketChannel webSocketChannel) {
-		return new WebSocketLiteral(webSocketChannels.get(webSocketChannel));
-	}
+    }
 
-	ConcurrentHashMap<WebSocketChannel, String> getWebSocketChannels() {
-		return webSocketChannels;
-	}
+    private WsChannel createWsChannel(final WebSocketChannel channel, final WebSocketHttpExchange exchange) {
+        return new WsChannel(channel, exchange);
+    }
+
+    private void sendMessage(final AbstractWsEvent event) {
+        beanManager.fireEvent(event, createWebsocketLiteral(event.getChannel().getChannel()));
+    }
+
+    private WebSocketLiteral createWebsocketLiteral(final WebSocketChannel webSocketChannel) {
+        return new WebSocketLiteral(webSocketChannels.get(webSocketChannel));
+    }
+
+    ConcurrentHashMap<WebSocketChannel, String> getWebSocketChannels() {
+        return webSocketChannels;
+    }
 
 }

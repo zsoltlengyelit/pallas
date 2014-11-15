@@ -15,44 +15,71 @@ import com.google.common.base.Optional;
  */
 public class ConfigurationProducer {
 
-	@Inject
-	private Configuration configuration;
+    @Inject
+    private Configuration configuration;
 
-	@Produces
-	@Configured(defaultValue = "")
-	public String produceConfiguredProperty(final InjectionPoint injectionPoint) {
+    @Produces
+    @Configured(defaultValue = "")
+    public Integer produceIntegerConfiguredProperty(final InjectionPoint injectionPoint) {
+        return Float.valueOf(produceConfiguredProperty(injectionPoint)).intValue();
+    }
 
-		final String defaultValue = injectionPoint.getAnnotated().getAnnotation(Configured.class).defaultValue();
+    @Produces
+    @Configured(defaultValue = "")
+    public Float produceFloatConfiguredProperty(final InjectionPoint injectionPoint) {
+        return Float.valueOf(produceConfiguredProperty(injectionPoint));
+    }
 
-		final AnnotatedField<?> annotatedField = (AnnotatedField<?>) injectionPoint.getAnnotated();
+    @Produces
+    @Configured(defaultValue = "")
+    public Double produceDoubleConfiguredProperty(final InjectionPoint injectionPoint) {
+        return Double.valueOf(produceConfiguredProperty(injectionPoint));
+    }
 
-		final String fieldName = annotatedField.getJavaMember().getName();
-		final Component annotation = injectionPoint.getBean().getBeanClass().getAnnotation(Component.class);
+    @Produces
+    @Configured(defaultValue = "")
+    public Long produceLongConfiguredProperty(final InjectionPoint injectionPoint) {
+        return Float.valueOf(produceConfiguredProperty(injectionPoint)).longValue();
+    }
 
-		if (null != annotation) {
-			final String componentName = annotation.value();
+    @Produces
+    @Configured(defaultValue = "")
+    public String produceConfiguredProperty(final InjectionPoint injectionPoint) {
 
-			// dedicated name
-			// FIXME dedicated name for components
-			final String reference = configuration.getString(/* "application.components." + */componentName + "." + fieldName);
+        final String defaultValue = injectionPoint.getAnnotated().getAnnotation(Configured.class).defaultValue();
 
-			return Optional.fromNullable(reference).or(defaultValue);
-		}
+        final AnnotatedField<?> annotatedField = (AnnotatedField<?>) injectionPoint.getAnnotated();
 
-		return defaultValue;
-	}
+        final String fieldName = annotatedField.getJavaMember().getName();
+        final Component annotation = injectionPoint.getBean().getBeanClass().getAnnotation(Component.class);
 
-	@Produces
-	@ConfProperty(name = "")
-	public String produceConfProperty(final InjectionPoint injectionPoint) {
+        if (null != annotation) {
+            final String componentName = annotation.value();
 
-		final ConfProperty confProperty = injectionPoint.getAnnotated().getAnnotation(ConfProperty.class);
-		final String defaultValue = confProperty.defaultValue();
-		final String name = confProperty.name();
+            // dedicated name
+            // FIXME dedicated name for components
+            final String reference = configuration.getString(/*
+             * "application.components."
+             * +
+             */componentName + "." + fieldName);
 
-		final String reference = configuration.getString(name);
+            return Optional.fromNullable(reference).or(defaultValue);
+        }
 
-		return Optional.fromNullable(reference).or(defaultValue);
-	}
+        return defaultValue;
+    }
+
+    @Produces
+    @ConfProperty(name = "")
+    public String produceConfProperty(final InjectionPoint injectionPoint) {
+
+        final ConfProperty confProperty = injectionPoint.getAnnotated().getAnnotation(ConfProperty.class);
+        final String defaultValue = confProperty.defaultValue();
+        final String name = confProperty.name();
+
+        final String reference = configuration.getString(name);
+
+        return Optional.fromNullable(reference).or(defaultValue);
+    }
 
 }
