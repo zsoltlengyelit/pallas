@@ -1,5 +1,6 @@
 package io.pallas.core.ws;
 
+import io.pallas.core.util.Json;
 import io.undertow.websockets.core.WebSocketChannel;
 import io.undertow.websockets.core.WebSockets;
 
@@ -10,35 +11,47 @@ import java.util.Map.Entry;
  */
 public class Broadcaster {
 
-	private final String path;
-	private final WebSocketConnectionHandler connectionHandler;
+    private final String path;
+    private final WebSocketConnectionHandler connectionHandler;
 
-	public Broadcaster(final String path, final WebSocketConnectionHandler connectionHandler) {
-		this.path = path;
-		this.connectionHandler = connectionHandler;
+    public Broadcaster(final String path, final WebSocketConnectionHandler connectionHandler) {
+        this.path = path;
+        this.connectionHandler = connectionHandler;
 
-	}
+    }
 
-	/**
-	 * Broadcasts message to channels on path
-	 *
-	 * @param message
-	 */
-	public void broadcast(final String message) {
+    /**
+     * Broadcasts Json message.
+     *
+     * @param data
+     *            DTO
+     */
+    public void broadcastJson(final Object data) {
 
-		for (final Entry<WebSocketChannel, String> entry : connectionHandler.getWebSocketChannels().entrySet()) {
+        final String message = Json.create().toJsonText(data);
+        broadcast(message);
+    }
 
-			final String url = entry.getValue();
+    /**
+     * Broadcasts message to channels on path
+     *
+     * @param message
+     */
+    public void broadcast(final String message) {
 
-			// match path
-			if (url.startsWith(path)) {
-				final WebSocketChannel channel = entry.getKey();
+        for (final Entry<WebSocketChannel, String> entry : connectionHandler.getWebSocketChannels().entrySet()) {
 
-				WebSockets.sendText(message, channel, null);
-			}
+            final String url = entry.getValue();
 
-		}
+            // match path
+            if (url.startsWith(path)) {
+                final WebSocketChannel channel = entry.getKey();
 
-	}
+                WebSockets.sendText(message, channel, null);
+            }
+
+        }
+
+    }
 
 }
