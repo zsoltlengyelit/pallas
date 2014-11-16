@@ -49,9 +49,25 @@ public class Broadcaster {
 
                 WebSockets.sendText(message, channel, null);
             }
-
         }
 
     }
+
+    //    public void broadcastBinary(final byte[] data) {
+    //
+    //        final ByteBuffer buffer = ByteBuffer.wrap(data);
+    //
+    //        for (final Entry<WebSocketChannel, String> entry : connectionHandler.getWebSocketChannels().entrySet()) {
+    //
+    //            final String url = entry.getValue();
+    //
+    //            // match path
+    //            if (url.startsWith(path)) {
+    //                final WebSocketChannel channel = entry.getKey();
+    //
+    //                WebSockets.sendBinary(buffer, channel, null);
+    //            }
+    //        }
+    //    }
 
 }
